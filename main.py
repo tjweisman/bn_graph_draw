@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import wx
-from sage.all import *
 from drawgraph import *
 
 class Frame(wx.Frame):

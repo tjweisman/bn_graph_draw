@@ -1,5 +1,14 @@
-from sage.all import *
-from sympy.matrices import *
+sage_ok = True
+sympy_ok = True
+try:
+    from sage.all import *
+except ImportError as e:
+    sage_ok = False
+
+try:
+    from sympy.matrices import *
+except ImportError as e:
+    sympy_ok = False
 
 class Point:
     pass
@@ -56,13 +65,19 @@ class Graph:
         return Q
         
     def jacobian(self):
+        if not sage_ok:
+            return "Install Sage to compute the Jacobian"
         Q = matrix(self.laplacian())
         return filter(lambda x: x != 0 and x != 1, Q.elementary_divisors())
 
     def guess_pairing(self):
+        if not sympy_ok:
+            return "SymPy needed to compute pairing guess"
         n = len(self.vertices)
         Q = Matrix(self.laplacian()) #this is SymPy!
         J = ones(n,n)
+        if (Q + J/n).det() == 0:
+            return 0
         pinv = (Q + J/n).inv() - J/n
         
         div = zeros(n, 1)
