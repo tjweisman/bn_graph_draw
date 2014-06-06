@@ -1,3 +1,6 @@
+from sage.all import *
+from sympy.matrices import *
+
 class Point:
     pass
 
@@ -41,7 +44,7 @@ class Graph:
     def get_last(self):
         return self.vertices[-1]
 
-    def get_laplacian(self):
+    def laplacian(self):
         n = len(self.vertices)
         Q = [x[:] for x in [[0]*n]*n]
         for edge in self.edges:
@@ -51,3 +54,30 @@ class Graph:
             Q[i][i] += 1
             Q[j][j] += 1
         return Q
+        
+    def jacobian(self):
+        Q = matrix(self.laplacian())
+        return Q.elementary_divisors()[:-1]
+
+    def guess_pairing(self):
+        n = len(self.vertices)
+        Q = Matrix(self.laplacian()) #this is SymPy!
+        J = ones(n,n)
+        pinv = (Q + J/n).inv() - J/n
+        
+        div = zeros(n, 1)
+        div[0,0] = -1
+        #we might not get a generator... is there a way to check?
+        for i in range(1,n):
+            div[i,0] = 1
+            pair = (div.T * pinv * div)[0,0]
+            if pair != 0:
+                return pair
+        return 0
+        
+
+    def print_laplacian(self):
+        Q = self.laplacian()
+        print Q
+        print repr(Q).replace("[","{").replace("]","}")
+        print ""

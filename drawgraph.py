@@ -16,7 +16,7 @@ def draw_edge(gc, edge, graph):
     #count the number of vertices on either side of the edge
     pos = 0
     neg = 0
-    for vertex in graph.vertices:
+    for vertex in filter(lambda v: not edge.has(v), graph.vertices):
         vec = Point()
         vec.x, vec.y = vertex.x - midpoint.x, vertex.y - midpoint.y
         mat = [[edge_v.x, edge_perp.x],[edge_v.y, edge_perp.y]]
@@ -29,8 +29,9 @@ def draw_edge(gc, edge, graph):
             neg += 1
 
     norm = sqrt(edge_perp.x**2 + edge_perp.y**2)
-    edge_perp.x /= norm
-    edge_perp.y /= norm
+    if norm != 0:
+        edge_perp.x /= norm
+        edge_perp.y /= norm
 
     #draw a quadratic bezier curve between the edge
     #the control point is farther from the edge if there are more edges
@@ -46,7 +47,7 @@ def draw_edge(gc, edge, graph):
     gc.DrawPath(path)
 
 class DrawPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, info_evt):
         self.graph = Graph()
         wx.Panel.__init__(self, parent)
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -58,6 +59,8 @@ class DrawPanel(wx.Panel):
         self.gray = wx.Brush((150, 150, 150))
         self.pink = wx.Brush((255, 100, 100))
 
+        self.info_evt = info_evt
+
         self.selection = None
     def on_size(self, event):
         event.Skip()
@@ -65,6 +68,7 @@ class DrawPanel(wx.Panel):
     def on_paint(self, event):
         w,h = self.GetClientSize()
         dc = wx.PaintDC(self)        
+        dc.SetBackground(wx.Brush("white"))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         gc.SetPen(wx.Pen("black", 1))
@@ -85,11 +89,6 @@ class DrawPanel(wx.Panel):
                            vertex.y - Vertex.radius, 
                            2 * Vertex.radius, 
                            2 * Vertex.radius)
-    def print_laplacian(self):
-        Q = self.graph.get_laplacian()
-        print Q
-        print repr(Q).replace("[","{").replace("]","}")
-        print ""
     def on_click(self, event):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
@@ -99,7 +98,10 @@ class DrawPanel(wx.Panel):
                     self.graph.add_edge(self.selection, vertex)
                     self.selection.selected = False
                     self.selection = None
-                    self.print_laplacian()
+                    self.info_evt(
+                        self.graph.laplacian(),
+                        self.graph.jacobian(),
+                        self.graph.guess_pairing())
                 else:
                     self.selection = vertex
                     vertex.selected = True
@@ -109,7 +111,10 @@ class DrawPanel(wx.Panel):
         last = self.graph.get_last()
         if event.ShiftDown() and self.selection:
             self.graph.add_edge(self.selection, last)
-            self.print_laplacian()
+            self.info_evt(
+                self.graph.laplacian(),
+                self.graph.jacobian(),
+                self.graph.guess_pairing())
         self.graph.deselect_all()
         self.selection = last
         self.selection.selected = True
@@ -122,16 +127,3 @@ class DrawPanel(wx.Panel):
             else:
                 vertex.hover = False
         self.Refresh()
-
-class Frame(wx.Frame):
-    def __init__(self, title):
-        wx.Frame.__init__(self, None, title=title)
-        self.Center()
-        self.view = DrawPanel(self)
-
-app = wx.App()
-
-frame=Frame('Graphmake')
-frame.Show()
-
-app.MainLoop()
