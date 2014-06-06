@@ -57,7 +57,7 @@ class Graph:
         
     def jacobian(self):
         Q = matrix(self.laplacian())
-        return Q.elementary_divisors()[:-1]
+        return filter(lambda x: x != 0 and x != 1, Q.elementary_divisors())
 
     def guess_pairing(self):
         n = len(self.vertices)
@@ -81,3 +81,4 @@ class Graph:
         print Q
         print repr(Q).replace("[","{").replace("]","}")
         print ""
+        

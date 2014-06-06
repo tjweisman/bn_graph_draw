@@ -4,7 +4,7 @@ import wx
 from graph import *
 from math import sqrt
 
-def draw_edge(gc, edge, graph):
+def get_edge_curve(edge, graph):
     midpoint = Point()
     edge_v = Point()
     edge_perp = Point()
@@ -41,10 +41,20 @@ def draw_edge(gc, edge, graph):
         sign *= -1
     cx = midpoint.x + sign * edge_perp.x * (edge.index - 1)
     cy = midpoint.y + sign * edge_perp.y * (edge.index - 1)
-    path = gc.CreatePath()
-    path.MoveToPoint(edge.v1.x, edge.v1.y)
-    path.AddQuadCurveToPoint(cx, cy, edge.v2.x, edge.v2.y)
-    gc.DrawPath(path)
+    return (edge.v1.x, edge.v1.y, cx, cy, edge.v2.x, edge.v2.y)
+    
+
+def get_tikz_code(graph):
+    scale  = float(50)
+    output = "\\begin{tikzpicture}\n"
+    for vertex in graph.vertices:
+        output += "\\filldraw (%f, %f) circle (3pt);\n"%(vertex.x/scale, vertex.y/scale)
+    for edge in graph.edges:
+        path_ctrl = get_edge_curve(edge, graph)
+        tikz_ctrl = tuple(map(lambda x:x/scale, path_ctrl))
+        output += "\draw (%f, %f) .. controls (%f, %f) .. (%f, %f);\n"%tikz_ctrl
+    output += "\\end{tikzpicture}\n"
+    return output
 
 class DrawPanel(wx.Panel):
     def __init__(self, parent, info_evt):
@@ -74,7 +84,11 @@ class DrawPanel(wx.Panel):
         gc.SetPen(wx.Pen("black", 1))
 
         for edge in self.graph.edges:
-            draw_edge(gc, edge, self.graph)
+            path_ctrl = get_edge_curve(edge, self.graph)
+            path = gc.CreatePath()
+            path.MoveToPoint(path_ctrl[0], path_ctrl[1])
+            path.AddQuadCurveToPoint(path_ctrl[2], path_ctrl[3], path_ctrl[4], path_ctrl[5])
+            gc.DrawPath(path)
 
         for vertex in self.graph.vertices:
             if vertex.selected and not vertex.hover:
