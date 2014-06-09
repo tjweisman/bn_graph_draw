@@ -96,4 +96,8 @@ class Graph:
         print Q
         print repr(Q).replace("[","{").replace("]","}")
         print ""
-        
+
+    def clear(self):
+        self.vertices = []
+        self.edges = []
+        Vertex.count = 0

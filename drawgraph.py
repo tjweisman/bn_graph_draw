@@ -141,3 +141,7 @@ class DrawPanel(wx.Panel):
             else:
                 vertex.hover = False
         self.Refresh()
+    def clear(self):
+        self.graph.clear()
+        self.selection = None
+        self.Refresh()
