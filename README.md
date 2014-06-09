@@ -4,16 +4,20 @@ monodromy pairing associated with them.
 
 REQUIREMENTS:
 
-Sage (http://www.sagemath.org/)
+Sage (http://www.sagemath.org/). Required to compute invariant factors
+of the Jacobian.
 
-Python (version MUST match the version installed with Sage; for Sage
-6.2 this is Python 2.7)
+Python (https://www.python.org/). Version MUST match the version
+installed with Sage; for Sage 6.2 this is Python 2.7
 
 wxPython (http://www.wxpython.org/)
 
-
 This should run on OS/X or Linux-based systems. Running it on Windows
-will probably require some serious fnangling.
+should possible, although getting it to work with Sage will probably be
+difficult.
+
+If you can't get Sage working, you can still recover some
+functionality by installing SymPy (http://sympy.org/).
 
 
 SETUP:
