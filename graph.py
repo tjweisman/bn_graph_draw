@@ -162,7 +162,6 @@ class Divisor:
             return
         for vertex in self.graph.vertices[1:]:
             x.set(vertex, vertex.deg - self.get(vertex))
-        x.set(self.graph.vertices[0], v0)
         #S for SymPy
         xS = Matrix(n - 1, 1, x.values[1:])
         QS = self.graph.sym_laplacian()
