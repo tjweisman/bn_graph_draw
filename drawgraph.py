@@ -10,7 +10,7 @@ import wx
 from graph import *
 from math import sqrt
 
-def get_edge_curve(edge, graph):
+def control_point(edge, graph):
     midpoint = Point()
     edge_v = Point()
     edge_perp = Point()
@@ -39,27 +39,41 @@ def get_edge_curve(edge, graph):
         edge_perp.x /= norm
         edge_perp.y /= norm
 
-    #get coordinates for a quadratic bezier curve between the edge
-    #the control point is farther from the edge if there are more edges
-    #it's placed on the side of the edge that has less vertices
+    #get coordinates for a quadratic bezier curve between the edge.
+    #the control point is farther from the edge if there are more edges.
+    #it's placed on the side of the edge that has fewer vertices
     sign = 30
     if pos > neg:
         sign *= -1
-    cx = midpoint.x + sign * edge_perp.x * (edge.index - 1)
-    cy = midpoint.y + sign * edge_perp.y * (edge.index - 1)
-    return (edge.v1.x, edge.v1.y, cx, cy, edge.v2.x, edge.v2.y)
+    c = Point()
+    c.x = midpoint.x + sign * edge_perp.x * (edge.index - 1)
+    c.y = midpoint.y + sign * edge_perp.y * (edge.index - 1)
+    return c
     
+#transform a point in window coords to tikz coords
+def tikz_transform(point, origin, scale):
+    #y-axis is flipped, since +y = down in window coords
+    return ((point.x - origin.x)/scale, (origin.y - point.y)/scale)
 
-#this will return the graph upside down, since window coordinates use +y = down
 def get_tikz_code(graph):
-    scale  = float(50)
+    scale  = float(50) #pixels to TikZ coordinates
+    origin = Point()
+    
+    #the following isn't super efficient, but whatever
+    origin.x = min(map(lambda v: v.x, graph.vertices) +
+                   map(lambda e: control_point(e, graph).x, graph.edges))
+    origin.y = max(map(lambda v: v.y, graph.vertices) +
+                   map(lambda e: control_point(e, graph).y, graph.edges))
+
     output = "\\begin{tikzpicture}\n"
     for vertex in graph.vertices:
-        output += "\\filldraw (%f, %f) circle (3pt);\n"%(vertex.x/scale, vertex.y/scale)
+        output += "\\filldraw (%f, %f) circle (3pt);\n"%tikz_transform(vertex, origin, scale)
     for edge in graph.edges:
-        path_ctrl = get_edge_curve(edge, graph)
-        tikz_ctrl = tuple(map(lambda x:x/scale, path_ctrl))
-        output += "\draw (%f, %f) .. controls (%f, %f) .. (%f, %f);\n"%tikz_ctrl
+        ctrl = control_point(edge, graph)
+        tikz_tup = (tikz_transform(edge.v1, origin, scale) +
+                    tikz_transform(ctrl, origin, scale) + 
+                    tikz_transform(edge.v2, origin, scale))
+        output += "\draw (%f, %f) .. controls (%f, %f) .. (%f, %f);\n"%tikz_tup
     output += "\\end{tikzpicture}\n"
     return output
 
@@ -97,10 +111,10 @@ class DrawPanel(wx.Panel):
 
         #draw edges
         for edge in self.graph.edges:
-            path_ctrl = get_edge_curve(edge, self.graph)
+            ctrl = control_point(edge, self.graph)
             path = gc.CreatePath()
-            path.MoveToPoint(path_ctrl[0], path_ctrl[1])
-            path.AddQuadCurveToPoint(path_ctrl[2], path_ctrl[3], path_ctrl[4], path_ctrl[5])
+            path.MoveToPoint(edge.v1.x, edge.v1.y)
+            path.AddQuadCurveToPoint(ctrl.x, ctrl.y, edge.v2.x, edge.v2.y)
             gc.DrawPath(path)
 
         #draw vertices
