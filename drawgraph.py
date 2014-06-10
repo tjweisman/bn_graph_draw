@@ -1,5 +1,11 @@
 #!/usr/bin/python
 
+#contains most of the code for the graph drawing panel
+#some display information (whether a vertex is selected, etc.) is contained
+#in graph.py
+
+#UI main loop and parent window are started in main.py
+
 import wx
 from graph import *
 from math import sqrt
@@ -33,7 +39,7 @@ def get_edge_curve(edge, graph):
         edge_perp.x /= norm
         edge_perp.y /= norm
 
-    #draw a quadratic bezier curve between the edge
+    #get coordinates for a quadratic bezier curve between the edge
     #the control point is farther from the edge if there are more edges
     #it's placed on the side of the edge that has less vertices
     sign = 30
@@ -44,6 +50,7 @@ def get_edge_curve(edge, graph):
     return (edge.v1.x, edge.v1.y, cx, cy, edge.v2.x, edge.v2.y)
     
 
+#this will return the graph upside down, since window coordinates use +y = down
 def get_tikz_code(graph):
     scale  = float(50)
     output = "\\begin{tikzpicture}\n"
@@ -56,6 +63,7 @@ def get_tikz_code(graph):
     output += "\\end{tikzpicture}\n"
     return output
 
+#the graph-drawing panel
 class DrawPanel(wx.Panel):
     def __init__(self, parent, info_evt):
         self.graph = Graph()
@@ -64,13 +72,17 @@ class DrawPanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
         self.Bind(wx.EVT_MOTION, self.mouse_move)
+        
+        #vertex colors
         self.black = wx.Brush((0,0,0))
         self.red = wx.Brush((255,0,0))
         self.gray = wx.Brush((150, 150, 150))
         self.pink = wx.Brush((255, 100, 100))
 
+        #function to call whenever an edge is added to the graph
         self.info_evt = info_evt
 
+        #which vertex is selected (red), or None if none is
         self.selection = None
     def on_size(self, event):
         event.Skip()
@@ -83,6 +95,7 @@ class DrawPanel(wx.Panel):
         gc = wx.GraphicsContext.Create(dc)
         gc.SetPen(wx.Pen("black", 1))
 
+        #draw edges
         for edge in self.graph.edges:
             path_ctrl = get_edge_curve(edge, self.graph)
             path = gc.CreatePath()
@@ -90,6 +103,7 @@ class DrawPanel(wx.Panel):
             path.AddQuadCurveToPoint(path_ctrl[2], path_ctrl[3], path_ctrl[4], path_ctrl[5])
             gc.DrawPath(path)
 
+        #draw vertices
         for vertex in self.graph.vertices:
             if vertex.selected and not vertex.hover:
                 gc.SetBrush(self.red)
@@ -122,7 +136,7 @@ class DrawPanel(wx.Panel):
                 self.Refresh()
                 return
         self.graph.add_vertex(x, y)
-        last = self.graph.get_last()
+        last = self.graph.get_last() #the vertex we just added
         if event.ShiftDown() and self.selection:
             self.graph.add_edge(self.selection, last)
             self.info_evt(
@@ -134,6 +148,7 @@ class DrawPanel(wx.Panel):
         self.selection.selected = True
         self.Refresh()
     def mouse_move(self, event):
+        #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
             if vertex.over(x,y):

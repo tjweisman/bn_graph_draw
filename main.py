@@ -3,16 +3,20 @@
 import wx
 from drawgraph import *
 
+#the main app window
 class Frame(wx.Frame):
     def __init__(self, title):
         wx.Frame.__init__(self, None, title=title)
         self.Center()
 
         self.main_panel = wx.Panel(self)
+
+        #panel with buttons and text boxes
         info_panel = wx.Panel(self.main_panel)
         info_sizer = wx.BoxSizer(wx.VERTICAL)
         info_panel.SetSizer(info_sizer)
 
+        #buttons panel
         button_panel = wx.Panel(info_panel)
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_panel.SetSizer(button_sizer)
@@ -22,6 +26,7 @@ class Frame(wx.Frame):
         button_sizer.Add(self.tikz, 0)
         button_sizer.Add(self.clear, 0)
         
+        #text boxes
         self.laplacian = wx.TextCtrl(info_panel)
         self.jacobian = wx.TextCtrl(info_panel)
         self.pair_guess = wx.TextCtrl(info_panel)
@@ -35,6 +40,7 @@ class Frame(wx.Frame):
         self.jacobian.SetEditable(False)
         self.pair_guess.SetEditable(False)
 
+        #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
                               self.update_info)
         
@@ -45,6 +51,8 @@ class Frame(wx.Frame):
         main_sizer.Add(info_panel, 0, wx.EXPAND)
         main_sizer.Add(self.view, 1, wx.EXPAND)
         self.main_panel.SetSizer(main_sizer)
+
+    #open up a file dialog and write to a file
     def export_tikz(self, evt):
         dialog = wx.FileDialog(self, style = wx.FD_SAVE)
         dialog.ShowModal()
@@ -55,6 +63,7 @@ class Frame(wx.Frame):
             tf.write(get_tikz_code(self.view.graph))
             tf.close()
 
+    #the function to call whenever an edge is updated
     def update_info(self, Q, Jac, pair):
         self.laplacian.SetValue(repr(Q))
         self.jacobian.SetValue(repr(Jac))
