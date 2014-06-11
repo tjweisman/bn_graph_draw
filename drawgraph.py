@@ -103,7 +103,7 @@ class DrawPanel(wx.Panel):
         self.Refresh()
     def on_paint(self, event):
         w,h = self.GetClientSize()
-        dc = wx.PaintDC(self)        
+        dc = wx.BufferedPaintDC(self)        
         dc.SetBackground(wx.Brush("white"))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)

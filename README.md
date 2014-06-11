@@ -46,3 +46,9 @@ Top: Laplacian matrix for this graph
 Middle: Nonzero elementary divisors of the Laplacian matrix
 
 Bottom: The pairing <d,d> for some nonzero element d
+
+TODO: 
+
+-complete implementation of gonality-computing algorithm
+
+-implement double-buffering
