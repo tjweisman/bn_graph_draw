@@ -13,6 +13,8 @@ try:
 except ImportError as e:
     sympy_ok = False
 
+import gonality
+
 class Point:
     pass
 
@@ -57,6 +59,7 @@ class Graph:
         self.edges = []
         #laplacian is None whenever it's out-of-date
         self.Q = None
+        self.A = None
         # SymPy version of laplacian (so we don't call the matrix constructor
         # unnecessarily)
         self.SymQ = None
@@ -85,6 +88,16 @@ class Graph:
         self.laplacian()
         return self.SymQ
         
+    def adjacency(self):
+        n = len(self.vertices)
+        if self.A:
+            return self.A
+        self.A = [x[:] for x in [[0]*n]*n]
+        for edge in self.edges:
+            i,j = edge.v1.i, edge.v2.i
+            self.A[i][j] -= 1
+            self.A[j][i] -= 1
+        return self.A
     def laplacian(self):
         # if we already have a valid laplacian don't bother recomputing it
         if self.Q:
@@ -155,20 +168,3 @@ class Divisor:
         return self.values[vertex.i]
     def compute_degree(self):
         self.degree = sum(self.values)
-
-    #implementation of Algorithm 5.1 in Bruyn '12
-    def reduced(self):
-        n = len(self.graph.vertices)
-        x = Divisor(self.graph)
-        if len(self.graph.vertices) <= 1:
-            return
-        for vertex in self.graph.vertices[1:]:
-            x.set(vertex, vertex.deg - self.get(vertex))
-        #S for SymPy
-        xS = Matrix(n - 1, 1, x.values[1:])
-        QS = self.graph.sym_laplacian()
-        yS = zeros(1).col_join(QS.minorMatrix(0,0).LUsolve(xS))
-        vals = [x + y for x,y in zip(self.values, QS * yS.applyfunc(floor))]
-        d = Divisor(self.graph)
-        d.values = vals
-        return d
