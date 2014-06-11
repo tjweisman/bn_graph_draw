@@ -97,7 +97,8 @@ class Graph:
             self.Q[j][i] -= 1
             self.Q[i][i] += 1
             self.Q[j][j] += 1
-        self.SymQ = Matrix(self.Q)
+        if sympy_ok:
+            self.SymQ = Matrix(self.Q)
         return self.Q
         
     def jacobian(self):
@@ -139,6 +140,7 @@ class Graph:
         self.vertices = []
         self.edges = []
         self.Q = None
+        self.SymQ = None
         Vertex.count = 0
 
 # a divisor on a graph
