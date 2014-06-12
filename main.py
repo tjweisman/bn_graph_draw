@@ -2,6 +2,21 @@
 
 import wx
 from drawgraph import *
+import gonality
+
+class InfoBox(wx.Panel):
+    def __init__(self, parent, title):
+        wx.Panel.__init__(self, parent)
+        
+        self.label=wx.StaticText(self, label=title)
+        self.display=wx.TextCtrl(self)
+        self.display.SetEditable(False)
+        
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.label, 0)
+        sizer.Add(self.display, 1, wx.EXPAND)
+        
+        self.SetSizer(sizer)
 
 #the main app window
 class Frame(wx.Frame):
@@ -12,33 +27,27 @@ class Frame(wx.Frame):
         self.main_panel = wx.Panel(self)
 
         #panel with buttons and text boxes
-        info_panel = wx.Panel(self.main_panel)
-        info_sizer = wx.BoxSizer(wx.VERTICAL)
-        info_panel.SetSizer(info_sizer)
+        self.info_panel = wx.Panel(self.main_panel)
+        self.info_sizer = wx.FlexGridSizer(rows=0,cols=2)
+        self.info_sizer.AddGrowableCol(1, proportion=5)
+        self.info_panel.SetSizer(self.info_sizer)
 
         #buttons panel
-        button_panel = wx.Panel(info_panel)
+        button_panel = wx.Panel(self.main_panel)
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_panel.SetSizer(button_sizer)
 
         self.tikz = wx.Button(button_panel, -1, "Export TikZ")
         self.clear = wx.Button(button_panel, -1, "Clear graph")
-        button_sizer.Add(self.tikz, 0)
-        button_sizer.Add(self.clear, 0)
+        self.compute_gon = wx.Button(button_panel, -1, "Compute gonality")
+        button_sizer.AddMany([(self.tikz, 0), (self.clear,0), (self.compute_gon, 0)])
         
         #text boxes
-        self.laplacian = wx.TextCtrl(info_panel)
-        self.jacobian = wx.TextCtrl(info_panel)
-        self.pair_guess = wx.TextCtrl(info_panel)
-        info_sizer.Add(button_panel, 0, wx.EXPAND)
-        info_sizer.Add(self.laplacian, 1, wx.EXPAND)
-        info_sizer.Add(self.jacobian, 1, wx.EXPAND)
-        info_sizer.Add(self.pair_guess, 1, wx.EXPAND)
-
-
-        self.laplacian.SetEditable(False)
-        self.jacobian.SetEditable(False)
-        self.pair_guess.SetEditable(False)
+        self.laplacian = self.add_infobox("Laplacian:")
+        self.jacobian = self.add_infobox("Jacobian:")
+        self.genus = self.add_infobox("Genus:")
+        self.pair_guess = self.add_infobox("<x,x>:")
+        self.gonality = self.add_infobox("Gonality:")
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
@@ -46,9 +55,11 @@ class Frame(wx.Frame):
         
         self.tikz.Bind(wx.EVT_BUTTON, self.export_tikz)
         self.clear.Bind(wx.EVT_BUTTON, self.clear_event)
+        self.compute_gon.Bind(wx.EVT_BUTTON, self.compute_gonality)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-        main_sizer.Add(info_panel, 0, wx.EXPAND)
+        main_sizer.Add(button_panel)
+        main_sizer.Add(self.info_panel, 0, wx.EXPAND)
         main_sizer.Add(self.view, 1, wx.EXPAND)
         self.main_panel.SetSizer(main_sizer)
 
@@ -63,14 +74,27 @@ class Frame(wx.Frame):
             tf.write(get_tikz_code(self.view.graph))
             tf.close()
 
+    def compute_gonality(self, event):
+        gon = gonality.gonality(self.view.graph)
+        self.gonality.SetValue(repr(gon))
+
     #the function to call whenever an edge is updated
-    def update_info(self, Q, Jac, pair):
-        self.laplacian.SetValue(repr(Q))
-        self.jacobian.SetValue(repr(Jac))
-        self.pair_guess.SetValue(repr(pair))
+    def update_info(self, data):
+        self.laplacian.SetValue(repr(data[0]))
+        self.jacobian.SetValue(repr(data[1]))
+        self.genus.SetValue(repr(data[2]))
+        self.pair_guess.SetValue(repr(data[3]))
+        self.gonality.SetValue("")
     
     def clear_event(self, event):
         self.view.clear()
+
+    def add_infobox(self, title):
+        infolabel = wx.StaticText(self.info_panel, label=title)
+        infobox = wx.TextCtrl(self.info_panel)
+        self.info_sizer.Add(infolabel)
+        self.info_sizer.Add(infobox, 1, wx.EXPAND)
+        return infobox
 
 app = wx.App()
 

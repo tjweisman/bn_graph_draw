@@ -13,8 +13,6 @@ try:
 except ImportError as e:
     sympy_ok = False
 
-import gonality
-
 class Point:
     pass
 
@@ -66,6 +64,7 @@ class Graph:
     def add_vertex(self, x=0, y=0):
         self.vertices.append(Vertex(x,y))
         self.Q = None
+        self.A = None
     def add_edge(self, v1, v2):
         self.edges.append(Edge(v1, v2))
         
@@ -76,6 +75,7 @@ class Graph:
             if edge.has(v1) and edge.has(v2):
                 self.edges[-1].index += 1
         self.Q = None
+        self.A = None
     def deselect_all(self):
         for vertex in self.vertices:
             vertex.selected = False
@@ -155,6 +155,9 @@ class Graph:
         self.Q = None
         self.SymQ = None
         Vertex.count = 0
+
+    def genus(self):
+        return len(self.edges) - len(self.vertices) + 1
 
 # a divisor on a graph
 class Divisor:

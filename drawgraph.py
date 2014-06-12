@@ -140,10 +140,7 @@ class DrawPanel(wx.Panel):
                     self.graph.add_edge(self.selection, vertex)
                     self.selection.selected = False
                     self.selection = None
-                    self.info_evt(
-                        self.graph.laplacian(),
-                        self.graph.jacobian(),
-                        self.graph.guess_pairing())
+                    self.update_info()
                 else:
                     self.selection = vertex
                     vertex.selected = True
@@ -153,14 +150,17 @@ class DrawPanel(wx.Panel):
         last = self.graph.get_last() #the vertex we just added
         if event.ShiftDown() and self.selection:
             self.graph.add_edge(self.selection, last)
-            self.info_evt(
-                self.graph.laplacian(),
-                self.graph.jacobian(),
-                self.graph.guess_pairing())
+            self.update_info()
         self.graph.deselect_all()
         self.selection = last
         self.selection.selected = True
         self.Refresh()
+    def update_info(self):
+        self.info_evt(
+            [self.graph.laplacian(),
+             self.graph.jacobian(),
+             self.graph.genus(),
+             self.graph.guess_pairing()])
     def mouse_move(self, event):
         #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()
