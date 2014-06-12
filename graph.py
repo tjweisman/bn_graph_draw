@@ -167,7 +167,7 @@ class Graph:
         tmp = open("tmp.sage", "w")
         tmp.write("A = matrix(%s)\n"%repr(self.laplacian()))
         tmp.write("div = A.elementary_divisors()\n")
-        tmp.write("div = filter(lambda x: x != 0, div)\n")
+        tmp.write("div = filter(lambda x: x != 0 and x != 1, div)\n")
         tmp.write("out = open('output', 'w')\n")
         tmp.write("out.write(repr(div))\n")
         tmp.write("out.close()")

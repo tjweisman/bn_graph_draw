@@ -4,6 +4,13 @@ import wx
 from drawgraph import *
 import gonality
 
+sage_ok = True
+
+try:
+    import sage.all
+except ImportError as e:
+    sage_ok = False
+
 class InfoBox(wx.Panel):
     def __init__(self, parent, title):
         wx.Panel.__init__(self, parent)
@@ -21,7 +28,7 @@ class InfoBox(wx.Panel):
 #the main app window
 class Frame(wx.Frame):
     def __init__(self, title):
-        wx.Frame.__init__(self, None, title=title)
+        wx.Frame.__init__(self, None, title=title, size=(600,600))        
         self.Center()
 
         self.main_panel = wx.Panel(self)
@@ -40,7 +47,11 @@ class Frame(wx.Frame):
         self.tikz = wx.Button(button_panel, -1, "Export TikZ")
         self.clear = wx.Button(button_panel, -1, "Clear graph")
         self.compute_gon = wx.Button(button_panel, -1, "Compute gonality")
-        button_sizer.AddMany([(self.tikz, 0), (self.clear,0), (self.compute_gon, 0)])
+        self.compute_jac = wx.Button(button_panel, -1, "Compute Jacobian")
+        button_sizer.AddMany([(self.tikz, 0), 
+                              (self.clear,0), 
+                              (self.compute_gon, 0),
+                              (self.compute_jac, 0)])
         
         #text boxes
         self.laplacian = self.add_infobox("Laplacian:")
@@ -51,11 +62,13 @@ class Frame(wx.Frame):
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
-                              self.update_info)
+                              self.update_info,
+                              sage_ok)
         
         self.tikz.Bind(wx.EVT_BUTTON, self.export_tikz)
         self.clear.Bind(wx.EVT_BUTTON, self.clear_event)
         self.compute_gon.Bind(wx.EVT_BUTTON, self.compute_gonality)
+        self.compute_jac.Bind(wx.EVT_BUTTON, self.compute_jacobian)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(button_panel)
@@ -81,7 +94,10 @@ class Frame(wx.Frame):
     #the function to call whenever an edge is updated
     def update_info(self, data):
         self.laplacian.SetValue(repr(data[0]))
-        self.jacobian.SetValue(repr(data[1]))
+        if sage_ok:
+            self.jacobian.SetValue(repr(data[1]))
+        else:
+            self.jacobian.SetValue("")
         self.genus.SetValue(repr(data[2]))
         self.pair_guess.SetValue(repr(data[3]))
         self.gonality.SetValue("")
@@ -95,6 +111,10 @@ class Frame(wx.Frame):
         self.info_sizer.Add(infolabel)
         self.info_sizer.Add(infobox, 1, wx.EXPAND)
         return infobox
+    
+    def compute_jacobian(self, event):
+        jac = self.view.graph.jacobian()
+        self.jacobian.SetValue(repr(jac))
 
 app = wx.App()
 

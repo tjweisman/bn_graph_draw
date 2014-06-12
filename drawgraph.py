@@ -79,7 +79,8 @@ def get_tikz_code(graph):
 
 #the graph-drawing panel
 class DrawPanel(wx.Panel):
-    def __init__(self, parent, info_evt):
+    def __init__(self, parent, info_evt, sage_ok):
+        self.sage_ok = sage_ok
         self.graph = Graph()
         wx.Panel.__init__(self, parent)
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -158,7 +159,7 @@ class DrawPanel(wx.Panel):
     def update_info(self):
         self.info_evt(
             [self.graph.laplacian(),
-             self.graph.jacobian(),
+             (self.graph.jacobian() if sage_ok else ""),
              self.graph.genus(),
              self.graph.guess_pairing()])
     def mouse_move(self, event):
