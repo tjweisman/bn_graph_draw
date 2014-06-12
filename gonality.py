@@ -1,7 +1,12 @@
 # some functions to do gonality computations
 
+sympy_ok = True
+
 from Queue import Queue
-from sympy.matrices import *
+try:
+    from sympy.matrices import *
+except ImportError as e:
+    sympy_ok = False
 from graph import *
 
 #implementation of Algorithm 5.1 in Bruyn '12
@@ -142,9 +147,15 @@ def gonality_accumulate(acc, next_acc):
     return acc
 
 def gonality(G):
+    if not sympy_ok:
+        return "SymPy needed to compute gonality"
     n = len(G.vertices)
     values = [0]*n
-    for i in range(1, n):
+    g = G.genus()
+    upper_bound = 2 * g - 2
+    if g < 2:
+        upper_bound = 2
+    for i in range(1, upper_bound + 1):
         pos_div = iterate_partition(lambda val: gonality_callback(val, G),
                                     values, 0, i, 
                                     accumulate=gonality_accumulate)
