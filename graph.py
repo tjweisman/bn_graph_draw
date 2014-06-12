@@ -13,6 +13,8 @@ try:
 except ImportError as e:
     sympy_ok = False
 
+from subprocess import call
+
 class Point:
     pass
 
@@ -116,7 +118,7 @@ class Graph:
         
     def jacobian(self):
         if not sage_ok:
-            return "Install Sage to compute the Jacobian"
+            return self.jacobian_no_sage()
         Q = matrix(self.laplacian())
         return filter(lambda x: x != 0 and x != 1, Q.elementary_divisors())
 
@@ -158,7 +160,24 @@ class Graph:
 
     def genus(self):
         return len(self.edges) - len(self.vertices) + 1
-
+    
+    #TODO: pipe this to a running sage process so it doesn't take as long
+    #also make this way less dumb
+    def jacobian_no_sage(self):
+        tmp = open("tmp.sage", "w")
+        tmp.write("A = matrix(%s)\n"%repr(self.laplacian()))
+        tmp.write("div = A.elementary_divisors()\n")
+        tmp.write("div = filter(lambda x: x != 0, div)\n")
+        tmp.write("out = open('output', 'w')\n")
+        tmp.write("out.write(repr(div))\n")
+        tmp.write("out.close()")
+        tmp.close()
+        call(["sage","tmp.sage"])
+        tmp = open("output","r")
+        jac = eval(tmp.read())
+        tmp.close()
+        return jac
+        
 # a divisor on a graph
 class Divisor:
     def __init__(self, graph):
