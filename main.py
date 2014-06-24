@@ -59,6 +59,7 @@ class Frame(wx.Frame):
         self.genus = self.add_infobox("Genus:")
         self.pair_guess = self.add_infobox("<x,x>:")
         self.gonality = self.add_infobox("Gonality:")
+        self.spanning_trees = self.add_infobox("Spanning trees:")
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
@@ -96,8 +97,11 @@ class Frame(wx.Frame):
         self.laplacian.SetValue(repr(data[0]))
         if sage_ok:
             self.jacobian.SetValue(repr(data[1]))
+            trees = reduce(lambda x,y: x * y, [1]+data[1])
+            self.spanning_trees.SetValue(repr(trees))
         else:
             self.jacobian.SetValue("")
+            self.spanning_trees.SetValue("")
         self.genus.SetValue(repr(data[2]))
         self.pair_guess.SetValue(repr(data[3]))
         self.gonality.SetValue("")
@@ -114,7 +118,9 @@ class Frame(wx.Frame):
     
     def compute_jacobian(self, event):
         jac = self.view.graph.jacobian()
+        trees = reduce(lambda x,y: x * y, [1]+jac)
         self.jacobian.SetValue(repr(jac))
+        self.spanning_trees.SetValue(repr(trees))
 
 app = wx.App()
 
