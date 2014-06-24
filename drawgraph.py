@@ -137,11 +137,14 @@ class DrawPanel(wx.Panel):
         for vertex in self.graph.vertices:
             if vertex.over(x, y):
                 if self.selection:
-                    #TODO: check that we didn't deselect
-                    self.graph.add_edge(self.selection, vertex)
-                    self.selection.selected = False
-                    self.selection = None
-                    self.update_info()
+                    if vertex.selected:
+                        vertex.selected = False
+                        self.selection = None
+                    else:
+                        self.graph.add_edge(self.selection, vertex)
+                        self.selection.selected = False
+                        self.selection = None
+                        self.update_info()
                 else:
                     self.selection = vertex
                     vertex.selected = True
