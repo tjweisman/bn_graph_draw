@@ -157,11 +157,7 @@ class DrawPanel(wx.Panel):
         self.selection.selected = True
         self.Refresh()
     def update_info(self):
-        self.info_evt(
-            [self.graph.laplacian(),
-             (self.graph.jacobian() if sage_ok else ""),
-             self.graph.genus(),
-             self.graph.guess_pairing()])
+        self.info_evt()
     def mouse_move(self, event):
         #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()

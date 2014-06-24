@@ -126,7 +126,7 @@ class Graph:
         if not sympy_ok:
             return "SymPy needed to compute pairing guess"
         n = len(self.vertices)
-        Q = self.SymQ #this is SymPy!
+        Q = self.sym_laplacian() #this is SymPy!
         J = ones(n,n)
 
         #Moore-Penrose pseudoinverse

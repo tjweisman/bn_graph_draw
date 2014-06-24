@@ -48,10 +48,13 @@ class Frame(wx.Frame):
         self.clear = wx.Button(button_panel, -1, "Clear graph")
         self.compute_gon = wx.Button(button_panel, -1, "Compute gonality")
         self.compute_jac = wx.Button(button_panel, -1, "Compute Jacobian")
+        self.laplacian_toggle = wx.CheckBox(button_panel, -1,
+                                            "Mathematica output")
         button_sizer.AddMany([(self.tikz, 0), 
                               (self.clear,0), 
                               (self.compute_gon, 0),
-                              (self.compute_jac, 0)])
+                              (self.compute_jac, 0),
+                              (self.laplacian_toggle, 0)])
         
         #text boxes
         self.laplacian = self.add_infobox("Laplacian:")
@@ -70,6 +73,7 @@ class Frame(wx.Frame):
         self.clear.Bind(wx.EVT_BUTTON, self.clear_event)
         self.compute_gon.Bind(wx.EVT_BUTTON, self.compute_gonality)
         self.compute_jac.Bind(wx.EVT_BUTTON, self.compute_jacobian)
+        self.laplacian_toggle.Bind(wx.EVT_CHECKBOX, self.update_lap)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(button_panel)
@@ -93,17 +97,19 @@ class Frame(wx.Frame):
         self.gonality.SetValue(repr(gon))
 
     #the function to call whenever an edge is updated
-    def update_info(self, data):
-        self.laplacian.SetValue(repr(data[0]))
+    def update_info(self):
+        G = self.view.graph
+        self.update_lap(None)
         if sage_ok:
-            self.jacobian.SetValue(repr(data[1]))
-            trees = reduce(lambda x,y: x * y, [1]+data[1])
+            jac = G.jacobian()
+            self.jacobian.SetValue(repr(jac))
+            trees = reduce(lambda x,y: x * y, [1]+jac)
             self.spanning_trees.SetValue(repr(trees))
         else:
             self.jacobian.SetValue("")
             self.spanning_trees.SetValue("")
-        self.genus.SetValue(repr(data[2]))
-        self.pair_guess.SetValue(repr(data[3]))
+        self.genus.SetValue(repr(G.genus()))
+        self.pair_guess.SetValue(repr(G.guess_pairing()))
         self.gonality.SetValue("")
     
     def clear_event(self, event):
@@ -112,6 +118,7 @@ class Frame(wx.Frame):
     def add_infobox(self, title):
         infolabel = wx.StaticText(self.info_panel, label=title)
         infobox = wx.TextCtrl(self.info_panel)
+        infobox.SetEditable(False)
         self.info_sizer.Add(infolabel)
         self.info_sizer.Add(infobox, 1, wx.EXPAND)
         return infobox
@@ -121,6 +128,12 @@ class Frame(wx.Frame):
         trees = reduce(lambda x,y: x * y, [1]+jac)
         self.jacobian.SetValue(repr(jac))
         self.spanning_trees.SetValue(repr(trees))
+        
+    def update_lap(self, event):
+        disp = repr(self.view.graph.laplacian())
+        if self.laplacian_toggle.IsChecked():
+            disp = disp.replace("[","{").replace("]","}")
+        self.laplacian.SetValue(disp)
 
 app = wx.App()
 
