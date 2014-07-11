@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import wx
+import options_dialog
 from drawgraph import *
 import gonality
 from graph import *
@@ -12,19 +13,20 @@ try:
 except ImportError as e:
     sage_ok = False
 
-class InfoBox(wx.Panel):
-    def __init__(self, parent, title):
-        wx.Panel.__init__(self, parent)
-        
-        self.label=wx.StaticText(self, label=title)
-        self.display=wx.TextCtrl(self)
+class InfoBox:
+    def __init__(self, parent, title, sizer):        
+        self.name = title
+
+        self.label=wx.StaticText(parent, label=(title+":"))
+        self.display=wx.TextCtrl(parent)
         self.display.SetEditable(False)
         
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.label, 0)
         sizer.Add(self.display, 1, wx.EXPAND)
-        
-        self.SetSizer(sizer)
+
+        self.enabled=True
+    def set_value(self, text):
+        self.display.SetValue(text)
 
 #the main app window
 class Frame(wx.Frame):
@@ -55,6 +57,7 @@ class Frame(wx.Frame):
         self.tryburn = wx.Button(button_panel,-1,"Try burn")
 
         self.drawBn = wx.Button(button_panel,-1,"Draw Bn")
+        self.options = wx.Button(button_panel, -1, "Options")
         button_sizer.AddMany([(self.tikz, 0), 
                               (self.clear,0), 
                               (self.cleardiv,0),
@@ -62,17 +65,20 @@ class Frame(wx.Frame):
                               (self.compute_jac, 0),
                               (self.laplacian_toggle, 0),
                               (self.tryburn,0),
-                              (self.drawBn,0)])        
+                              (self.drawBn,0),
+                              (self.options,0)])        
         #text boxes
-        self.laplacian = self.add_infobox("Laplacian:")
-        self.jacobian = self.add_infobox("Jacobian:")
-        self.genus = self.add_infobox("Genus:")
-        self.gonality = self.add_infobox("Gonality:")
-        self.pair_guess = self.add_infobox("<x,x>:")
-        self.spanning_trees = self.add_infobox("Spanning trees:")
-        self.connec = self.add_infobox("Connectedness:")
-        self.div = self.add_infobox("Divisor:")
-        self.subset = self.add_infobox("Fireable subset:")
+        self.infoboxes = []
+        
+        self.laplacian = self.add_infobox("Laplacian")
+        self.jacobian = self.add_infobox("Jacobian")
+        self.genus = self.add_infobox("Genus")
+        self.gonality = self.add_infobox("Gonality")
+        self.pair_guess = self.add_infobox("<x,x>")
+        self.spanning_trees = self.add_infobox("Spanning trees")
+        self.connec = self.add_infobox("Connectedness")
+        self.div = self.add_infobox("Divisor")
+        self.subset = self.add_infobox("Fireable subset")
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
@@ -86,6 +92,7 @@ class Frame(wx.Frame):
         self.cleardiv.Bind(wx.EVT_BUTTON, self.clear_divisor)
         self.tryburn.Bind(wx.EVT_BUTTON, self.try_burn)
         self.drawBn.Bind(wx.EVT_BUTTON,self.draw_Bn)
+        self.options.Bind(wx.EVT_BUTTON, self.opt_dialog)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(button_panel)
@@ -106,7 +113,7 @@ class Frame(wx.Frame):
 
     def compute_gonality(self, event):
         gon = gonality.gonality(self.view.graph)
-        self.gonality.SetValue(repr(gon))
+        self.gonality.set(repr(gon))
 
     def draw_Bn(self,event):
         self.view.gen_Bn(10)
@@ -118,18 +125,18 @@ class Frame(wx.Frame):
         self.update_lap(None)
         if sage_ok:
             jac = G.jacobian()
-            self.jacobian.SetValue(repr(jac))
+            self.jacobian.set_value(repr(jac))
             trees = reduce(lambda x,y: x * y, [1]+jac)
-            self.spanning_trees.SetValue(repr(trees))
+            self.spanning_trees.set_value(repr(trees))
         else:
-            self.jacobian.SetValue("")
-            self.spanning_trees.SetValue("")
-        self.genus.SetValue(repr(G.genus()))
-        self.pair_guess.SetValue(repr(G.guess_pairing()))
-        self.gonality.SetValue("")
-        self.connec.SetValue(repr(G.connected()))
-        self.div.SetValue(repr(self.view.divisor.values))
-        self.subset.SetValue(repr(self.view.fireset))
+            self.jacobian.set_value("")
+            self.spanning_trees.set_value("")
+        self.genus.set_value(repr(G.genus()))
+        self.pair_guess.set_value(repr(G.guess_pairing()))
+        self.gonality.set_value("")
+        self.connec.set_value(repr(G.connected()))
+        self.div.set_value(repr(self.view.divisor.values))
+        self.subset.set_value(repr(self.view.fireset))
     
     def clear_event(self, event):
         self.view.clear()
@@ -140,37 +147,44 @@ class Frame(wx.Frame):
         self.view.Refresh()
 
     def add_infobox(self, title):
-        infolabel = wx.StaticText(self.info_panel, label=title)
-        infobox = wx.TextCtrl(self.info_panel)
-        infobox.SetEditable(False)
-        self.info_sizer.Add(infolabel)
-        self.info_sizer.Add(infobox, 1, wx.EXPAND)
+        infobox = InfoBox(self.info_panel, 
+                          title, self.info_sizer)
+        #infolabel = wx.StaticText(self.info_panel, label=title)
+        #infobox = wx.TextCtrl(self.info_panel)
+        #infobox.SetEditable(False)
+        #self.info_sizer.Add(infolabel)
+        #self.info_sizer.Add(infobox, 1, wx.EXPAND)
+        self.infoboxes.append(infobox)
         return infobox
     
     def compute_jacobian(self, event):
         jac = self.view.graph.jacobian()
         trees = reduce(lambda x,y: x * y, [1]+jac)
-        self.jacobian.SetValue(repr(jac))
-        self.spanning_trees.SetValue(repr(trees))
+        self.jacobian.set_value(repr(jac))
+        self.spanning_trees.set_value(repr(trees))
         
     def update_lap(self, event):
         disp = repr(self.view.graph.laplacian())
         if self.laplacian_toggle.IsChecked():
             disp = disp.replace("[","{").replace("]","}")
-        self.laplacian.SetValue(disp)
+        self.laplacian.set_value(disp)
 
     def try_burn(self, event):
         if self.view.selection:       
             subset = self.view.divisor.burn(self.view.selection)
             if not subset:
-                self.subset.SetValue("Cannot push chips closer")
+                self.subset.set_value("Cannot push chips closer")
                 self.view.fireset = []
             else:
-                self.subset.SetValue(
+                self.subset.set_value(
                     repr(subset) + " - press 'Fire!' to chip-fire all")
                 self.view.fireset = subset
         else:
             pass
+
+    def opt_dialog(self, event):
+        dialog = options_dialog.OptionsDialog(self, self.infoboxes)
+        dialog.ShowModal()
 
 app = wx.App()
 
