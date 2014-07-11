@@ -3,6 +3,8 @@
 import wx
 from drawgraph import *
 import gonality
+from graph import *
+import spanning_trees
 
 sage_ok = True
 
@@ -46,29 +48,39 @@ class Frame(wx.Frame):
 
         self.tikz = wx.Button(button_panel, -1, "Export TikZ")
         self.clear = wx.Button(button_panel, -1, "Clear graph")
+        self.cleardiv = wx.Button(button_panel, -1, "Clear divisor")
         self.compute_gon = wx.Button(button_panel, -1, "Compute gonality")
-        self.compute_jac = wx.Button(button_panel, -1, "Compute Jacobian")
+        self.tryburn = wx.Button(button_panel,-1,"Try burn")
+        self.getjac = wx.Button(button_panel,-1,"Get Jacobian")
+
+        self.drawBn = wx.Button(button_panel,-1,"Draw Bn")
         button_sizer.AddMany([(self.tikz, 0), 
                               (self.clear,0), 
+                              (self.cleardiv,0),
                               (self.compute_gon, 0),
-                              (self.compute_jac, 0)])
+                              (self.tryburn,0),
+                              (self.getjac,0),
+                              (self.drawBn,0)])
         
         #text boxes
         self.laplacian = self.add_infobox("Laplacian:")
-        self.jacobian = self.add_infobox("Jacobian:")
         self.genus = self.add_infobox("Genus:")
-        self.pair_guess = self.add_infobox("<x,x>:")
         self.gonality = self.add_infobox("Gonality:")
+        self.connec = self.add_infobox("Connectedness:")
+        self.div = self.add_infobox("Divisor:")
+        self.subset = self.add_infobox("Fireable subset:")
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
-                              self.update_info,
-                              sage_ok)
+                              self.update_info)
         
         self.tikz.Bind(wx.EVT_BUTTON, self.export_tikz)
         self.clear.Bind(wx.EVT_BUTTON, self.clear_event)
         self.compute_gon.Bind(wx.EVT_BUTTON, self.compute_gonality)
-        self.compute_jac.Bind(wx.EVT_BUTTON, self.compute_jacobian)
+        self.cleardiv.Bind(wx.EVT_BUTTON, self.clear_divisor)
+        self.tryburn.Bind(wx.EVT_BUTTON, self.try_burn)
+        self.getjac.Bind(wx.EVT_BUTTON,self.get_jacob)
+        self.drawBn.Bind(wx.EVT_BUTTON,self.draw_Bn)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         main_sizer.Add(button_panel)
@@ -91,19 +103,26 @@ class Frame(wx.Frame):
         gon = gonality.gonality(self.view.graph)
         self.gonality.SetValue(repr(gon))
 
+    def draw_Bn(self,event):
+        self.view.gen_Bn(10)
+
+
     #the function to call whenever an edge is updated
     def update_info(self, data):
         self.laplacian.SetValue(repr(data[0]))
-        if sage_ok:
-            self.jacobian.SetValue(repr(data[1]))
-        else:
-            self.jacobian.SetValue("")
-        self.genus.SetValue(repr(data[2]))
-        self.pair_guess.SetValue(repr(data[3]))
+        self.genus.SetValue(repr(data[1]))
         self.gonality.SetValue("")
+        self.connec.SetValue(repr(data[2]))
+        self.div.SetValue(repr(data[3]))
+        self.subset.SetValue(repr(data[4]))
     
     def clear_event(self, event):
         self.view.clear()
+
+    def clear_divisor(self, event):
+        self.view.divisor.__init__(self.view.graph)
+        self.view.update_info()
+        self.view.Refresh()
 
     def add_infobox(self, title):
         infolabel = wx.StaticText(self.info_panel, label=title)
@@ -111,10 +130,21 @@ class Frame(wx.Frame):
         self.info_sizer.Add(infolabel)
         self.info_sizer.Add(infobox, 1, wx.EXPAND)
         return infobox
-    
-    def compute_jacobian(self, event):
-        jac = self.view.graph.jacobian()
-        self.jacobian.SetValue(repr(jac))
+
+    def try_burn(self, event):
+        if self.view.selection:       
+            subset = self.view.divisor.burn(self.view.selection)
+            if not subset:
+                self.subset.SetValue("Cannot push chips closer")
+                self.view.fireset = []
+            else:
+                self.subset.SetValue(repr(subset) + " - press 'Fire!' to chip-fire all")
+                self.view.fireset = subset
+        else:
+            pass
+
+    def get_jacob(self, event):
+        self.view.graph.getJac()
 
 app = wx.App()
 

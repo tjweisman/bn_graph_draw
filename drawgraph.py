@@ -6,6 +6,7 @@
 
 #UI main loop and parent window are started in main.py
 
+import sys
 import wx
 from graph import *
 from math import sqrt
@@ -79,26 +80,50 @@ def get_tikz_code(graph):
 
 #the graph-drawing panel
 class DrawPanel(wx.Panel):
-    def __init__(self, parent, info_evt, sage_ok):
-        self.sage_ok = sage_ok
+    def __init__(self, parent, info_evt):
         self.graph = Graph()
+        self.divisor = Divisor(self.graph)
+        self.fireset = []
         wx.Panel.__init__(self, parent)
+
+        self.fire = wx.Button(self, -1, "Fire!", (0,0), (65,20))
+        self.borrow = wx.Button(self, -1, "Borrow!", (0,25), (65,20))
+        #self.treesel = wx.Button(self,-1,"Build tree", (0,50),(65,20))
+        self.newd = wx.TextCtrl(self,-1,"",(70,5),(60,20),wx.TE_PROCESS_ENTER)
+        self.newd.Hide()
+
+        #treesel = False
+
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
         self.Bind(wx.EVT_MOTION, self.mouse_move)
-        
+        self.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
+        self.fire.Bind(wx.EVT_BUTTON, self.on_fire)
+        self.borrow.Bind(wx.EVT_BUTTON, self.on_borrow)
+        #self.treesel.Bind(wx.EVT_BUTTON, self.on_treesel)
+
         #vertex colors
         self.black = wx.Brush((0,0,0))
         self.red = wx.Brush((255,0,0))
         self.gray = wx.Brush((150, 150, 150))
         self.pink = wx.Brush((255, 100, 100))
 
+        #font styles
+        self.fontsizes = [20,14,10,10]
+        self.x_displace = [5,3,2,20]
+        self.y_displace = [1,4,5,5]
+        self.fontcolors = ["white","white","white","black"]
+
         #function to call whenever an edge is added to the graph
         self.info_evt = info_evt
 
         #which vertex is selected (red), or None if none is
         self.selection = None
+
+        #string for updating divisor values
+        self.tempstring = ""
+
     def on_size(self, event):
         event.Skip()
         self.Refresh()
@@ -108,15 +133,16 @@ class DrawPanel(wx.Panel):
         dc.SetBackground(wx.Brush("white"))
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
-        gc.SetPen(wx.Pen("black", 1))
-
+        gc.SetPen(wx.Pen("black",1))
+        
+    
         #draw edges
         for edge in self.graph.edges:
             ctrl = control_point(edge, self.graph)
             path = gc.CreatePath()
             path.MoveToPoint(edge.v1.x, edge.v1.y)
             path.AddQuadCurveToPoint(ctrl.x, ctrl.y, edge.v2.x, edge.v2.y)
-            gc.DrawPath(path)
+            gc.DrawPath(path,1)
 
         #draw vertices
         for vertex in self.graph.vertices:
@@ -132,36 +158,60 @@ class DrawPanel(wx.Panel):
                            vertex.y - Vertex.radius, 
                            2 * Vertex.radius, 
                            2 * Vertex.radius)
+            m = len(str(self.divisor.get(vertex)))
+            if m > 3:
+                m = 4
+
+            font = wx.Font(self.fontsizes[m-1],wx.FONTFAMILY_SWISS,1,wx.FONTWEIGHT_BOLD)
+            gc.SetFont(font,self.fontcolors[m-1])
+            gc.DrawText(str(self.divisor.get(vertex)), vertex.x - Vertex.radius + self.x_displace[m-1],
+                                                        vertex.y - Vertex.radius + self.y_displace[m-1])
+
+
     def on_click(self, event):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
             if vertex.over(x, y):
-                if self.selection:
+                if self.selection and self.selection != vertex:
                     #TODO: check that we didn't deselect
                     self.graph.add_edge(self.selection, vertex)
                     self.selection.selected = False
                     self.selection = None
+                    self.fireset = []
+                    self.newd.Hide()
+                    self.update_info()
+                elif self.selection == vertex:
+                    self.selection.selected = False
+                    self.selection = None
+                    self.fireset = []
+                    self.newd.Hide()
                     self.update_info()
                 else:
                     self.selection = vertex
                     vertex.selected = True
+                    self.newd.Show()
                 self.Refresh()
                 return
+    
         self.graph.add_vertex(x, y)
         last = self.graph.get_last() #the vertex we just added
+        self.divisor.extend()
         if event.ShiftDown() and self.selection:
             self.graph.add_edge(self.selection, last)
             self.update_info()
         self.graph.deselect_all()
         self.selection = last
         self.selection.selected = True
+        self.newd.Show()
+        self.update_info()
         self.Refresh()
     def update_info(self):
         self.info_evt(
             [self.graph.laplacian(),
-             (self.graph.jacobian() if sage_ok else ""),
              self.graph.genus(),
-             self.graph.guess_pairing()])
+             self.graph.connected(),
+             self.divisor.values,
+             self.fireset])
     def mouse_move(self, event):
         #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()
@@ -171,7 +221,52 @@ class DrawPanel(wx.Panel):
             else:
                 vertex.hover = False
         self.Refresh()
+    def on_enter(self, event):
+        try:
+            n = int(self.newd.GetLineText(0))
+        except:
+            print "Not a number"
+            newd.Clear()
+            return
+        if self.selection:
+            self.divisor.set(self.selection,n)
+        self.newd.Clear()
+        self.update_info()
+        self.Refresh()
+
+    def on_fire(self, event):
+        if self.selection:
+            if self.fireset:
+                for i in self.fireset:
+                    self.divisor.fire(self.graph.vertices[i])
+                self.fireset = []
+            else:
+                self.divisor.fire(self.selection)
+            self.update_info()
+            self.Refresh()
+
+    def on_borrow(self, event):
+        if self.selection:
+            self.divisor.borrow(self.selection)
+            self.update_info()
+            self.Refresh()
+
+    def gen_Bn(self,n):
+        self.graph.clear()
+        self.divisor.__init__(self.graph)
+        self.graph.add_vertex(50,150)
+        self.graph.add_vertex(450,150)
+        self.divisor.extend()
+        self.divisor.extend()
+        for i in xrange(n):
+            self.graph.add_edge(self.graph.vertices[0],self.graph.vertices[1])
+        self.update_info()
+        self.Refresh()
+
     def clear(self):
         self.graph.clear()
+        self.divisor.__init__(self.graph)
         self.selection = None
+        self.update_info()
         self.Refresh()
+
