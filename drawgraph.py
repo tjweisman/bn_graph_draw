@@ -86,13 +86,19 @@ class DrawPanel(wx.Panel):
         self.fireset = []
         wx.Panel.__init__(self, parent)
 
-        self.fire = wx.Button(self, -1, "Fire!", (0,0), (65,20))
-        self.borrow = wx.Button(self, -1, "Borrow!", (0,25), (65,20))
+        self.divisor_panel = wx.Panel(self, pos=(0,0))
+        self.divisor_panel.SetBackgroundColour('white')
+        self.divisor_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.fire = wx.Button(self.divisor_panel, -1, "Fire!")
+        self.borrow = wx.Button(self.divisor_panel, -1, "Borrow!")
         #self.treesel = wx.Button(self,-1,"Build tree", (0,50),(65,20))
-        self.newd = wx.TextCtrl(self,-1,"",(70,5),(60,20),wx.TE_PROCESS_ENTER)
+        self.newd = wx.TextCtrl(self.divisor_panel, 
+                                size=(60,20),
+                                style=wx.TE_PROCESS_ENTER)
+        self.divisor_sizer.AddMany([(self.fire),(self.borrow), (self.newd)])
+        self.divisor_panel.SetSizer(self.divisor_sizer)
         self.newd.Hide()
-
-        #treesel = False
+        self.divisor_panel.Fit()            
 
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
@@ -190,7 +196,7 @@ class DrawPanel(wx.Panel):
                 else:
                     self.selection = vertex
                     vertex.selected = True
-                    self.newd.Show()
+                    self.show_div_box()
                 self.Refresh()
                 return
     
@@ -203,7 +209,7 @@ class DrawPanel(wx.Panel):
         self.graph.deselect_all()
         self.selection = last
         self.selection.selected = True
-        self.newd.Show()
+        self.show_div_box()
         self.update_info()
         self.Refresh()
     def update_info(self):
@@ -265,4 +271,10 @@ class DrawPanel(wx.Panel):
         self.selection = None
         self.update_info()
         self.Refresh()
+
+    def show_div_box(self):
+        self.newd.Show()
+        self.divisor_panel.Fit()
+        self.divisor_panel.Layout()
+        self.divisor_sizer.Layout()
 

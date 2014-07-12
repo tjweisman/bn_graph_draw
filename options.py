@@ -7,11 +7,15 @@ BOOLEAN=0
 TEXTBOX=1
 
 def setup_options(frame):
-    for key, infobox in frame.infoboxes.iteritems():
-        frame.options[key] = Option(infobox.name, BOOLEAN, True)
 
     frame.options["mathematica"] = Option(
         "Mathematica Output", BOOLEAN, False)
+
+    frame.options["divisor_iput"] = Option(
+        "Show divisor input", BOOLEAN, True)
+
+    for key, infobox in frame.infoboxes.iteritems():
+        frame.options[key] = Option("Display " + infobox.name, BOOLEAN, True)
 
     #load defaults
     load_options(frame.options)

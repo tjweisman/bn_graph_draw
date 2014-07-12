@@ -4,6 +4,7 @@ import wx
 import options
 from drawgraph import *
 from controller import *
+import collections
 
 sage_ok = True
 OPTIONS=0
@@ -47,6 +48,10 @@ class Frame(wx.Frame):
 
         self.main_panel = wx.Panel(self)
 
+        self.options = collections.OrderedDict({})
+        self.infoboxes = collections.OrderedDict({})
+        self.buttons = []
+
         #main menu
         self.menu_bar = wx.MenuBar()
         self.file_menu = wx.Menu()
@@ -69,11 +74,7 @@ class Frame(wx.Frame):
                               self.update_info)
 
         self.controller = Controller(self)
-        
-        self.options = {}
-        self.infoboxes = {}
-        self.buttons = []
-
+    
         self.add_infobox("lap", "Laplacian")
         self.add_infobox("jac", "Jacobian")
         self.add_infobox("genus", "Genus")
@@ -134,6 +135,11 @@ class Frame(wx.Frame):
         for key in self.infoboxes.keys():
             self.infoboxes[key].set_enabled(self.options[key].value)
         self.controller.update_lap(None)
+        
+        if self.options["divisor_iput"].value:
+            self.view.divisor_panel.Show()
+        else:
+            self.view.divisor_panel.Hide()
         
 
 app = wx.App()
