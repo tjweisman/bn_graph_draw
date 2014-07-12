@@ -1,4 +1,4 @@
-import wx        
+import wx, anydbm
 
 OK=0
 CANCEL=1
@@ -10,13 +10,34 @@ def setup_options(frame):
     for key, infobox in frame.infoboxes.iteritems():
         frame.options[key] = Option(infobox.name, BOOLEAN, True)
 
-    frame.options["mathematica"] = Option("Mathematica Output", BOOLEAN, False)
+    frame.options["mathematica"] = Option(
+        "Mathematica Output", BOOLEAN, False)
 
-    #turn off specific guys by default
-    frame.options["connect"].value = False
-    frame.options["div"].value = False
-    frame.options["subset"].value = False
-    frame.options["pair_guess"].value = False
+    #load defaults
+    load_options(frame.options)
+
+def load_options(options):
+    #load an options file, if there is one
+    db = anydbm.open('config', 'c')
+    for key, option in options.iteritems():
+        try:
+            val = db[key]
+            if option.opt_type == BOOLEAN:
+                option.value = (val == "True")
+            else:
+                option.value = db[key]
+        except KeyError as e:
+            pass
+    db.close()
+
+def save_options(options):
+    db = anydbm.open('config', 'c')
+    for key, option in options.iteritems():
+        if option.opt_type == BOOLEAN:
+            db[key] = "True" if option.value else "False"
+        else:
+            db[key] = option.value
+    db.close()
 
 class Option:
     def __init__(self, label, opt_type, default):
@@ -71,4 +92,5 @@ class OptionsDialog(wx.Dialog):
                 elif option.opt_type == TEXTBOX:
                     #this won't actually work
                     option.value = option.widget.GetValue()
+            save_options(self.options)
         self.Destroy()
