@@ -71,7 +71,8 @@ class Frame(wx.Frame):
 
         #the graph drawing panel
         self.view = DrawPanel(self.main_panel, 
-                              self.update_info)
+                              self.update_info,
+                              self.options)
 
         self.controller = Controller(self)
     
@@ -138,7 +139,11 @@ class Frame(wx.Frame):
         
         if self.options["divisor_iput"].value:
             self.view.divisor_panel.Show()
+            self.view.v_radius = 10
+            self.view.click_radius = 20
         else:
+            self.view.v_radius = 5
+            self.view.click_radius = 10
             self.view.divisor_panel.Hide()
         
 

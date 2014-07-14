@@ -25,10 +25,6 @@ class Vertex:
     #this will break if we define more than one graph!
     #count = 0
     
-    #vertex display information
-    radius = 10
-    click_radius = 20
-
     def __init__(self, x=0, y=0):
         self.i = 0
         #Vertex.count += 1
@@ -44,8 +40,8 @@ class Vertex:
         self.x, self.y = x, y
     
     #True iff the given x/y coordinates are over the vertex
-    def over(self, x, y):
-        return ((x - self.x)**2 + (y - self.y)**2) < Vertex.click_radius**2
+    def over(self, x, y, click_radius):
+        return ((x - self.x)**2 + (y - self.y)**2) < click_radius**2
 
 class Edge:
     def __init__(self, v1, v2):

@@ -80,11 +80,14 @@ def get_tikz_code(graph):
 
 #the graph-drawing panel
 class DrawPanel(wx.Panel):
-    def __init__(self, parent, info_evt):
+    def __init__(self, parent, info_evt, options):
+        wx.Panel.__init__(self, parent)
+        self.options = options
+
         self.graph = Graph()
         self.divisor = Divisor(self.graph)
         self.fireset = []
-        wx.Panel.__init__(self, parent)
+        
 
         self.divisor_panel = wx.Panel(self, pos=(0,0))
         self.divisor_panel.SetBackgroundColour('white')
@@ -120,6 +123,9 @@ class DrawPanel(wx.Panel):
         self.x_displace = [5,3,2,20]
         self.y_displace = [1,4,5,5]
         self.fontcolors = ["white","white","white","black"]
+
+        self.v_radius = 10
+        self.click_radius = 20
 
         #function to call whenever an edge is added to the graph
         self.info_evt = info_evt
@@ -160,27 +166,29 @@ class DrawPanel(wx.Panel):
                 gc.SetBrush(self.gray)
             else:
                 gc.SetBrush(self.black)
-            gc.DrawEllipse(vertex.x - Vertex.radius, 
-                           vertex.y - Vertex.radius, 
-                           2 * Vertex.radius, 
-                           2 * Vertex.radius)
+            gc.DrawEllipse(vertex.x - self.v_radius, 
+                           vertex.y - self.v_radius, 
+                           2 * self.v_radius, 
+                           2 * self.v_radius)
             m = len(str(self.divisor.get(vertex)))
             if m > 3:
                 m = 4
 
-            font = wx.Font(self.fontsizes[m-1],
-                           wx.FONTFAMILY_SWISS,
-                           wx.FONTSTYLE_NORMAL,
-                           wx.FONTWEIGHT_BOLD)
-            gc.SetFont(font,self.fontcolors[m-1])
-            gc.DrawText(str(self.divisor.get(vertex)), vertex.x - Vertex.radius + self.x_displace[m-1],
-                                                        vertex.y - Vertex.radius + self.y_displace[m-1])
+            if self.options["divisor_iput"].value:
+                font = wx.Font(self.fontsizes[m-1],
+                               wx.FONTFAMILY_SWISS,
+                               wx.FONTSTYLE_NORMAL,
+                               wx.FONTWEIGHT_BOLD)
+                gc.SetFont(font,self.fontcolors[m-1])
+                gc.DrawText(str(self.divisor.get(vertex)),
+                            vertex.x - self.v_radius + self.x_displace[m-1],
+                            vertex.y - self.v_radius + self.y_displace[m-1])
 
 
     def on_click(self, event):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
-            if vertex.over(x, y):
+            if vertex.over(x, y, self.click_radius):
                 if self.selection:
                     if vertex.selected:
                         vertex.selected = False
@@ -218,7 +226,7 @@ class DrawPanel(wx.Panel):
         #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
-            if vertex.over(x,y):
+            if vertex.over(x,y, self.click_radius):
                 vertex.hover = True
             else:
                 vertex.hover = False
