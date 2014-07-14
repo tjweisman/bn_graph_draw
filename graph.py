@@ -1,4 +1,4 @@
-# this file contains code for actually storing/computing graph information
+"""this file contains code for actually storing/computing graph information"""
 
 #import spanning_trees
 
@@ -217,16 +217,16 @@ class Graph:
     #TODO: pipe this to a running sage process so it doesn't take as long
     #also make this way less dumb
     def jacobian_no_sage(self):
-        tmp = open("tmp.sage", "w")
+        tmp = open(".tmp.sage", "w")
         tmp.write("A = matrix(%s)\n"%repr(self.laplacian()))
         tmp.write("div = A.elementary_divisors()\n")
         tmp.write("div = filter(lambda x: x != 0 and x != 1, div)\n")
-        tmp.write("out = open('output', 'w')\n")
+        tmp.write("out = open('.output', 'w')\n")
         tmp.write("out.write(repr(div))\n")
         tmp.write("out.close()")
         tmp.close()
-        call(["sage","tmp.sage"])
-        tmp = open("output","r")
+        call(["sage",".tmp.sage"])
+        tmp = open(".output","r")
         jac = eval(tmp.read())
         tmp.close()
         return jac

@@ -1,7 +1,7 @@
 *~
 *.pyc
 tex/*
-tmp.py
-tmp.sage
-output
+.tmp.py
+.tmp.sage
+.output
 config

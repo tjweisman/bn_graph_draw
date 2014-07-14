@@ -1,3 +1,13 @@
+"""The main application file for the graph drawer.
+
+This file contains the layout and contents of the main window. It
+relegates actual control to a Controller object (see controller.py).
+
+It also defines the behavior of global application options in
+reconfigure() method.
+
+"""
+
 #!/usr/bin/python
 
 import wx
@@ -76,6 +86,7 @@ class Frame(wx.Frame):
 
         self.controller = Controller(self)
 
+        #add infoboxes
         self.add_infobox("lap", "Laplacian")
         self.add_infobox("jac", "Jacobian")
         self.add_infobox("genus", "Genus")
@@ -86,6 +97,7 @@ class Frame(wx.Frame):
         self.add_infobox("div", "Divisor")
         self.add_infobox("subset", "Fireable subset")
 
+        #add buttons
         self.add_button("Clear graph", self.controller.clear_event)
         self.add_button("Clear divisor", self.controller.clear_divisor,
                         display_opt="divisor_iput")
@@ -102,6 +114,7 @@ class Frame(wx.Frame):
                         display_opt="divisor_iput")
         self.add_button("Draw B_n", self.controller.draw_Bn)
 
+        #add file menu options
         self.add_file_option("Export TikZ", self.controller.export_tikz)
         self.add_file_option("Options", self.opt_dialog)        
 
@@ -117,21 +130,29 @@ class Frame(wx.Frame):
         self.reconfigure()
 
     def add_infobox(self, name, title):
+        """add an infobox to the display panel"""
         infobox = InfoBox(self.info_panel, 
                           title, self.info_sizer)
         self.infoboxes[name] = infobox
 
     def add_file_option(self, name, callback):
+        """add a file menu option to the menu bar"""
         item = self.file_menu.Append(-1, name, name)
         self.Bind(wx.EVT_MENU, callback, item)
 
     def add_button(self, title, callback, display_opt=None):
+        """add a button to the control panel
+
+        display_opt is the name of the (boolean) option to check for 
+        when to display this button. Button is always on if display_opt
+        is None. """
         button = wx.Button(self.button_panel, -1, title)
         button.Bind(wx.EVT_BUTTON, callback)
         button.display_opt = display_opt
         self.buttons.append(button)
 
     def opt_dialog(self, event):
+        """create the options dialog"""
         dialog = options.OptionsDialog(self, self.options)
         dialog.ShowModal()
         
@@ -143,6 +164,7 @@ class Frame(wx.Frame):
         self.controller.update_info()
 
     def reconfigure(self):
+        """update the application to respond to options changes"""
         for key in self.infoboxes.keys():
             self.infoboxes[key].set_enabled(self.options[key].value)
 

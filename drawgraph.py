@@ -1,10 +1,14 @@
+"""contains most of the code for the graph drawing panel
+some display information (whether a vertex is selected, etc.) is contained
+in graph.py
+
+UI main loop and parent window are started in main.py, and most UI
+behavior is contained in controller.py
+
+"""
+
+
 #!/usr/bin/python
-
-#contains most of the code for the graph drawing panel
-#some display information (whether a vertex is selected, etc.) is contained
-#in graph.py
-
-#UI main loop and parent window are started in main.py
 
 import sys
 import wx

@@ -1,3 +1,8 @@
+"""This file contains the definitions of the options dialog, as well
+as a definition of all the actual program options and procedures for
+saving/loading options from a config file.
+
+"""
 import wx
 import cPickle as pickle
 
@@ -9,12 +14,15 @@ TEXTBOX=1
 
 def setup_options(frame):
 
+    #define more options here if need be
+
     frame.options["mathematica"] = Option(
         "Mathematica Output", BOOLEAN, False)
 
     frame.options["divisor_iput"] = Option(
         "Show divisor input", BOOLEAN, True)
 
+    #automatically create display options for every infobox
     for key, infobox in frame.infoboxes.iteritems():
         frame.options[key] = Option("Display " + infobox.name, BOOLEAN, True)
 
@@ -26,13 +34,13 @@ def setup_options(frame):
         save_options(frame.options)
 
 def load_options(options):
-    with open('config', 'r') as cfg:
+    with open('.config', 'r') as cfg:
         load_opts = pickle.load(cfg)
         for (key, label, opt_type, value) in load_opts:
             options[key] = Option(label, opt_type, value)
 
 def save_options(options):
-    with open('config', 'w') as cfg:
+    with open('.config', 'w') as cfg:
         opt_dump = [(key, opt.label, opt.opt_type, opt.value) 
                     for key, opt in options.iteritems()]
         pickle.dump(opt_dump, cfg)

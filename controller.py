@@ -1,3 +1,8 @@
+"""This file contains the 'business logic' for the main application
+(as opposed to the application display information). Callbacks for
+buttons and infobox updating procedures are contained here.
+
+"""
 import wx, gonality
 from graph import *
 
@@ -31,6 +36,7 @@ class Controller:
 
     #the function to call whenever an edge is updated
     def update_info(self):
+        """mostly just updating infoboxes"""
         G = self.graph
         self.update_lap(None)
         if sage_ok:
