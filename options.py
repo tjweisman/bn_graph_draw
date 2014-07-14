@@ -1,4 +1,5 @@
-import wx, anydbm
+import wx
+import cPickle as pickle
 
 OK=0
 CANCEL=1
@@ -18,30 +19,23 @@ def setup_options(frame):
         frame.options[key] = Option("Display " + infobox.name, BOOLEAN, True)
 
     #load defaults
-    load_options(frame.options)
+    try:
+        load_options(frame.options)
+    except (IOError, EOFError, pickle.PicklingError):
+        print "No valid config file found, creating default config file"
+        save_options(frame.options)
 
 def load_options(options):
-    #load an options file, if there is one
-    db = anydbm.open('config', 'c')
-    for key, option in options.iteritems():
-        try:
-            val = db[key]
-            if option.opt_type == BOOLEAN:
-                option.value = (val == "True")
-            else:
-                option.value = db[key]
-        except KeyError as e:
-            pass
-    db.close()
+    with open('config', 'r') as cfg:
+        load_opts = pickle.load(cfg)
+        for (key, label, opt_type, value) in load_opts:
+            options[key] = Option(label, opt_type, value)
 
 def save_options(options):
-    db = anydbm.open('config', 'c')
-    for key, option in options.iteritems():
-        if option.opt_type == BOOLEAN:
-            db[key] = "True" if option.value else "False"
-        else:
-            db[key] = option.value
-    db.close()
+    with open('config', 'w') as cfg:
+        opt_dump = [(key, opt.label, opt.opt_type, opt.value) 
+                    for key, opt in options.iteritems()]
+        pickle.dump(opt_dump, cfg)
 
 class Option:
     def __init__(self, label, opt_type, default):
