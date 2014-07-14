@@ -177,14 +177,7 @@ class Frame(wx.Frame):
             
         self.controller.update_lap(None)
         
-        if self.options["divisor_iput"].value:
-            self.view.divisor_panel.Show()
-            self.view.v_radius = 10
-            self.view.click_radius = 20
-        else:
-            self.view.v_radius = 5
-            self.view.click_radius = 10
-            self.view.divisor_panel.Hide()
+        self.view.update_options()
         
 
 app = wx.App()

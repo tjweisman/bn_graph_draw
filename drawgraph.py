@@ -15,6 +15,11 @@ import wx
 from graph import *
 from math import sqrt
 
+NODIV_RADIUS=5
+NODIV_CLICK_RADIUS=20
+DIV_RADIUS=10
+DIV_CLICK_RADIUS=20
+
 def control_point(edge, graph):
     midpoint = Point()
     edge_v = Point()
@@ -128,9 +133,6 @@ class DrawPanel(wx.Panel):
         self.y_displace = [1,4,5,5]
         self.fontcolors = ["white","white","white","black"]
 
-        self.v_radius = 10
-        self.click_radius = 20
-
         #function to call whenever an edge is added to the graph
         self.info_evt = info_evt
 
@@ -226,6 +228,17 @@ class DrawPanel(wx.Panel):
         self.Refresh()
     def update_info(self):
         self.info_evt()
+
+    def update_options(self):
+        if self.options["divisor_iput"].value:
+            self.divisor_panel.Show()
+            self.v_radius = DIV_RADIUS
+            self.click_radius = DIV_CLICK_RADIUS
+        else:
+            self.v_radius = NODIV_RADIUS
+            self.click_radius = NODIV_CLICK_RADIUS
+            self.divisor_panel.Hide()
+
     def mouse_move(self, event):
         #draw different colors if we're hovering
         x,y = event.GetX(), event.GetY()
