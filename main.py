@@ -38,7 +38,7 @@ class InfoBox:
             self.display.Show()
         else:
             self.label.Hide()
-            self.display.Hide()        
+            self.display.Hide()
 
 #the main app window
 class Frame(wx.Frame):
@@ -75,7 +75,7 @@ class Frame(wx.Frame):
                               self.options)
 
         self.controller = Controller(self)
-    
+
         self.add_infobox("lap", "Laplacian")
         self.add_infobox("jac", "Jacobian")
         self.add_infobox("genus", "Genus")
@@ -86,15 +86,24 @@ class Frame(wx.Frame):
         self.add_infobox("div", "Divisor")
         self.add_infobox("subset", "Fireable subset")
 
-        self.add_file_option("Export TikZ", self.controller.export_tikz)
-        self.add_file_option("Options", self.opt_dialog)
-
         self.add_button("Clear graph", self.controller.clear_event)
-        self.add_button("Clear divisor", self.controller.clear_divisor)
-        self.add_button("Compute gonality", self.controller.compute_gonality)
-        self.add_button("Compute Jacobian", self.controller.compute_jacobian)
-        self.add_button("Try burn", self.controller.try_burn)
+        self.add_button("Clear divisor", self.controller.clear_divisor,
+                        display_opt="divisor_iput")
+        self.add_button("Compute gonality", 
+                        self.controller.compute_gonality, 
+                        display_opt="gonality")
+
+        if not sage_ok:
+            self.add_button("Compute Jacobian", 
+                            self.controller.compute_jacobian, 
+                            display_opt="jac")
+    
+        self.add_button("Try burn", self.controller.try_burn,
+                        display_opt="divisor_iput")
         self.add_button("Draw B_n", self.controller.draw_Bn)
+
+        self.add_file_option("Export TikZ", self.controller.export_tikz)
+        self.add_file_option("Options", self.opt_dialog)        
 
         button_sizer.AddMany([(button, 0) for button in self.buttons])
         
@@ -116,9 +125,10 @@ class Frame(wx.Frame):
         item = self.file_menu.Append(-1, name, name)
         self.Bind(wx.EVT_MENU, callback, item)
 
-    def add_button(self, name, callback):
-        button = wx.Button(self.button_panel, -1, name)
+    def add_button(self, title, callback, display_opt=None):
+        button = wx.Button(self.button_panel, -1, title)
         button.Bind(wx.EVT_BUTTON, callback)
+        button.display_opt = display_opt
         self.buttons.append(button)
 
     def opt_dialog(self, event):
@@ -135,6 +145,14 @@ class Frame(wx.Frame):
     def reconfigure(self):
         for key in self.infoboxes.keys():
             self.infoboxes[key].set_enabled(self.options[key].value)
+
+        for button in self.buttons:
+            if (button.display_opt 
+                and not self.options[button.display_opt].value):
+                button.Hide()
+            else:
+                button.Show()
+            
         self.controller.update_lap(None)
         
         if self.options["divisor_iput"].value:

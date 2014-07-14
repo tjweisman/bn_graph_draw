@@ -1,4 +1,4 @@
-import gonality
+import wx, gonality
 from graph import *
 
 class Controller:
@@ -34,7 +34,7 @@ class Controller:
         G = self.graph
         self.update_lap(None)
         if sage_ok:
-            self.compute_jacobian()
+            self.compute_jacobian(None)
         else:
             self.set_infobox("jac", ' ')
             self.set_infobox("trees", ' ')
