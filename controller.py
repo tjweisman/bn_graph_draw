@@ -3,7 +3,7 @@
 buttons and infobox updating procedures are contained here.
 
 """
-import wx, gonality
+import wx, gonality, drawgraph
 from graph import *
 
 class Controller:
@@ -24,7 +24,7 @@ class Controller:
         if path != "":
             print path
             tf = open(path, "w")
-            tf.write(get_tikz_code(self.graph))
+            tf.write(drawgraph.get_tikz_code(self.graph))
             tf.close()
 
     def compute_gonality(self, event):
