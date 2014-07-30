@@ -115,6 +115,7 @@ class DrawPanel(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click)
         self.Bind(wx.EVT_MOTION, self.mouse_move)
         self.Bind(wx.EVT_TEXT_ENTER, self.on_enter)
         self.fire.Bind(wx.EVT_BUTTON, self.on_fire)
@@ -190,7 +191,15 @@ class DrawPanel(wx.Panel):
                             vertex.x - self.v_radius + self.x_displace[m-1],
                             vertex.y - self.v_radius + self.y_displace[m-1])
 
-
+    def on_right_click(self, event):
+        x,y = event.GetX(), event.GetY()
+        for vertex in self.graph.vertices:
+            if vertex.over(x, y, self.click_radius):
+                self.graph.delete_vertex(vertex)
+                self.divisor.delete_vertex(vertex)
+                self.update_info()
+                self.Refresh()
+                break
     def on_click(self, event):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:

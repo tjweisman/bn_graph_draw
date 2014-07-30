@@ -21,13 +21,8 @@ class Point:
     pass
 
 class Vertex:
-    #number of vertices defined so far.
-    #this will break if we define more than one graph!
-    #count = 0
-    
     def __init__(self, x=0, y=0):
         self.i = 0
-        #Vertex.count += 1
         self.x, self.y = x,y
         
         #keep a running tab on the degree
@@ -61,7 +56,6 @@ class Edge:
 
 class Graph:
     def __init__(self):
-        self.vcount = 0
         self.vertices = []
         self.edges = []
         #laplacian is None whenever it's out-of-date
@@ -72,8 +66,7 @@ class Graph:
         self.SymQ = None
     def add_vertex(self, x=0, y=0):    
         new = Vertex(x,y)
-        new.i = self.vcount
-        self.vcount += 1
+        new.i = len(self.vertices)
         self.vertices.append(new)
         self.Q = None
         self.A = None
@@ -88,6 +81,17 @@ class Graph:
                 self.edges[-1].index += 1
         self.Q = None
         self.A = None
+    
+    def delete_vertex(self, v):
+        self.vertices.remove(v)
+        for edge in self.edges[:]:
+            if edge.has(v):
+                self.edges.remove(edge)
+        
+        for i, v in enumerate(self.vertices):
+            v.i = i
+        self.A = None
+        self.Q = None
     def deselect_all(self):
         for vertex in self.vertices:
             vertex.selected = False
@@ -104,7 +108,7 @@ class Graph:
         except:
             return 1
        
-        while nseen < self.vcount:
+        while nseen < len(self.vertices):
             for e in edgeL:
                 if e.has(newv):
                     edgeQ.append(e)
@@ -202,7 +206,6 @@ class Graph:
         self.edges = []
         self.Q = None
         self.SymQ = None
-        self.vcount = 0
 
     def genus(self):
         return len(self.edges) - len(self.vertices) + 1
@@ -293,6 +296,8 @@ class Divisor:
         else:
             self.values = forceval
         self.degree = 0
+    def delete_vertex(self, v):
+        self.values.pop(v.i)
     def extend(self, value=0):
         self.values.append(value)
     def set(self, vertex, value):
