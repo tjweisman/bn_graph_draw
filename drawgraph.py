@@ -195,6 +195,8 @@ class DrawPanel(wx.Panel):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
             if vertex.over(x, y, self.click_radius):
+                if vertex.selected:
+                    self.selection = None
                 self.graph.delete_vertex(vertex)
                 self.divisor.delete_vertex(vertex)
                 self.update_info()
