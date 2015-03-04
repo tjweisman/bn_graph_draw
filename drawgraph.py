@@ -131,7 +131,6 @@ class DrawPanel(wx.Panel):
         #font styles
         self.fontsizes = [20,14,10,10]
         self.x_displace = [5,3,2,20]
-        self.y_displace = [1,4,5,5]
         self.fontcolors = ["white","white","white","black"]
 
         #function to call whenever an edge is added to the graph
@@ -177,20 +176,25 @@ class DrawPanel(wx.Panel):
                            vertex.y - self.v_radius, 
                            2 * self.v_radius, 
                            2 * self.v_radius)
-            m = len(str(self.divisor.get(vertex)))
-            if m > 3:
-                m = 4
+            
+            m = min(len(str(self.divisor.get(vertex))), 4)
 
             if self.options["divisor_iput"].value:
+                d_val = str(self.divisor.get(vertex))
                 font = wx.Font(self.fontsizes[m-1],
                                wx.FONTFAMILY_SWISS,
                                wx.FONTSTYLE_NORMAL,
                                wx.FONTWEIGHT_BOLD)
                 gc.SetFont(font,self.fontcolors[m-1])
-                gc.DrawText(str(self.divisor.get(vertex)),
-                            vertex.x - self.v_radius + self.x_displace[m-1],
-                            vertex.y - self.v_radius + self.y_displace[m-1])
-
+                t_width, t_height = gc.GetTextExtent(d_val)
+                if t_width < self.v_radius * 2:
+                    gc.DrawText(d_val,
+                                vertex.x - t_width/2,
+                                vertex.y - t_height/2)
+                else:
+                    gc.DrawText(d_val, 
+                                vertex.x + self.v_radius, 
+                                vertex.y - t_height/2)
     def on_right_click(self, event):
         x,y = event.GetX(), event.GetY()
         for vertex in self.graph.vertices:
@@ -224,7 +228,7 @@ class DrawPanel(wx.Panel):
                     self.show_div_box()
                 self.Refresh()
                 return
-    
+
         self.graph.add_vertex(x, y)
         last = self.graph.get_last() #the vertex we just added
         self.divisor.extend()
@@ -270,6 +274,10 @@ class DrawPanel(wx.Panel):
             self.divisor.set(self.selection,n)
         self.newd.Clear()
         self.update_info()
+        if self.selection:
+            self.selection.selected = False
+            self.selection = None
+            self.newd.Hide()
         self.Refresh()
 
     def on_fire(self, event):
