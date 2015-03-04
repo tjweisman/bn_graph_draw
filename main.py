@@ -105,8 +105,6 @@ class Frame(wx.Frame):
         self.add_button("Compute gonality", 
                         self.controller.compute_gonality, 
                         display_opt="gonality")
-        self.add_button("Is zero?", self.controller.divisor_zero,
-                        display_opt="zero")
 
         if not sage_ok:
             self.add_button("Compute Jacobian", 

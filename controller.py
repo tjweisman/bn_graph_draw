@@ -50,6 +50,7 @@ class Controller:
         self.set_infobox("connect", G.connected())
         self.set_infobox("div", self.divisor.values)
         self.set_infobox("subset", self.drawer.fireset)
+        self.set_infobox("zero", self.divisor_zero())
     
     def clear_event(self, event):
         self.drawer.clear()
@@ -82,9 +83,12 @@ class Controller:
                     repr(subset) + " - press 'Fire!' to chip-fire all")
                 self.drawer.fireset = subset
 
-    def divisor_zero(self, event):
-        if gonality.rank_nonnegative(self.divisor):
-            self.set_infobox("zero","True")
+    def divisor_zero(self):
+        self.divisor.compute_degree()
+        if (self.divisor.degree == 0 and 
+            gonality.rank_nonnegative(self.divisor)):
+            return "True"
+            print self.divisor.degree
         else:
-            self.set_infobox("zero","False")
+            return "False"
             
