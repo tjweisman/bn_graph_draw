@@ -96,6 +96,7 @@ class Frame(wx.Frame):
         self.add_infobox("connect", "Connectedness")
         self.add_infobox("div", "Divisor")
         self.add_infobox("subset", "Fireable subset")
+        self.add_infobox("zero", "Is zero")
 
         #add buttons
         self.add_button("Clear graph", self.controller.clear_event)
@@ -104,6 +105,7 @@ class Frame(wx.Frame):
         self.add_button("Compute gonality", 
                         self.controller.compute_gonality, 
                         display_opt="gonality")
+        self.add_button("Is zero?", self.controller.divisor_zero)
 
         if not sage_ok:
             self.add_button("Compute Jacobian", 

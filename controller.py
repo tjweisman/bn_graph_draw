@@ -81,3 +81,10 @@ class Controller:
                 self.set_infobox("subset",
                     repr(subset) + " - press 'Fire!' to chip-fire all")
                 self.drawer.fireset = subset
+
+    def divisor_zero(self, event):
+        if gonality.rank_nonnegative(self.divisor):
+            self.set_infobox("zero","True")
+        else:
+            self.set_infobox("zero","False")
+            
