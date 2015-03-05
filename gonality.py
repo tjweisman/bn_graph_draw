@@ -82,6 +82,8 @@ def get_neighbors(v, G):
 
 #implementation of algorithm 5.3 in Bruyn '12
 def rank_nonnegative(D):
+    if len(G.vertices) == 0:
+        return True
     G = D.graph
     v = G.vertices[0]
     d = full_reduce(D, v)
