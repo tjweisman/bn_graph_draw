@@ -165,8 +165,7 @@ class Graph:
         return self.Q
         
     def jacobian(self):
-        if not sage_ok:
-            return self.jacobian_no_sage()
+        #only works if this program is running inside sage
         Q = matrix(self.laplacian())
         return filter(lambda x: x != 0 and x != 1, Q.elementary_divisors())
 
@@ -219,7 +218,10 @@ class Graph:
     
     #TODO: pipe this to a running sage process so it doesn't take as long
     #also make this way less dumb
-    def jacobian_no_sage(self):
+    def jacobian_sage_pipe(self, sage_process):
+        
+        print sage_process.stdin
+        return
         tmp = open(".tmp.sage", "w")
         tmp.write("A = matrix(%s)\n"%repr(self.laplacian()))
         tmp.write("div = A.elementary_divisors()\n")

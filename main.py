@@ -179,7 +179,7 @@ class Frame(wx.Frame):
         self.controller.update_lap(None)
         
         self.view.update_options()
-        
+
 
 app = wx.App()
 

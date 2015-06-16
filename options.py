@@ -22,6 +22,9 @@ def setup_options(frame):
     frame.options["divisor_iput"] = Option(
         "Show divisor input", BOOLEAN, True)
 
+    frame.options["sage_install"] = Option(
+        "Path to Sage binary", TEXTBOX, "")
+
     #automatically create display options for every infobox
     for key, infobox in frame.infoboxes.iteritems():
         frame.options[key] = Option("Display " + infobox.name, BOOLEAN, True)
@@ -55,10 +58,20 @@ class Option:
         if self.opt_type == BOOLEAN:
             self.widget = wx.CheckBox(parent, -1, self.label)
             self.widget.SetValue(self.value)
+            self.setting = self.widget
         elif self.opt_type == TEXTBOX:
             self.widget = wx.Panel(parent)
-            #TODO: support textbox options
+            sizer = wx.BoxSizer(wx.HORIZONTAL)
+            label = wx.StaticText(self.widget, label=self.label+":")
+            self.setting = wx.TextCtrl(self.widget, size=(300,-1))
+            self.setting.SetValue(self.value)
+            sizer.Add(label)
+            sizer.Add(self.setting)
+            self.widget.SetSizer(sizer)
         return self.widget
+
+    def save_value(self):
+        self.value = self.setting.GetValue()
 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, options):
@@ -77,7 +90,8 @@ class OptionsDialog(wx.Dialog):
         widgets = [option.opt_widget(self.options_panel)
                    for option in options.values()]
         options_sizer = wx.BoxSizer(wx.VERTICAL)
-        options_sizer.AddMany([(widget) for widget in widgets])
+        options_sizer.AddMany([(widget, 0, wx.TOP | wx.BOTTOM, 5) 
+                               for widget in widgets])
         self.options_panel.SetSizer(options_sizer)
 
         confirm_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -93,10 +107,6 @@ class OptionsDialog(wx.Dialog):
     def handle_button(self, event):
         if event.GetId() == OK:
             for option in self.options.values():
-                if option.opt_type == BOOLEAN:
-                    option.value = option.widget.IsChecked()
-                elif option.opt_type == TEXTBOX:
-                    #this won't actually work
-                    option.value = option.widget.GetValue()
+                option.save_value()
             save_options(self.options)
         self.Destroy()

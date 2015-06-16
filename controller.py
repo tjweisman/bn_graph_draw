@@ -5,6 +5,7 @@ buttons and infobox updating procedures are contained here.
 """
 import wx, gonality, drawgraph
 from graph import *
+import subprocess
 
 class Controller:
     def __init__(self, frame):
@@ -12,6 +13,8 @@ class Controller:
         self.drawer = frame.view
         self.graph = frame.view.graph
         self.divisor = frame.view.divisor
+
+        self.sage_process = None
 
     def set_infobox(self, box_name, value):
         self.frame.infoboxes[box_name].display.SetValue(str(value))
@@ -39,11 +42,7 @@ class Controller:
         """mostly just updating infoboxes"""
         G = self.graph
         self.update_lap(None)
-        if sage_ok:
-            self.compute_jacobian(None)
-        else:
-            self.set_infobox("jac", ' ')
-            self.set_infobox("trees", ' ')
+        self.compute_jacobian(None)
         self.set_infobox("genus", G.genus())
         self.set_infobox("pair_guess", G.guess_pairing())
         self.set_infobox("gonality", ' ')
@@ -61,10 +60,25 @@ class Controller:
         self.drawer.Refresh()
 
     def compute_jacobian(self, event):
-        jac = self.graph.jacobian()
-        trees = reduce(lambda x,y: x * y, [1]+jac)
-        self.set_infobox("jac",jac)
-        self.set_infobox("trees",trees)
+        print sage_ok
+        if sage_ok:
+            jac = self.graph.jacobian()
+        elif self.frame.options["sage_install"].value != "":
+            if not self.sage_process:
+                sage_bin = self.frame.options["sage_install"].value
+                #if this program had higher level access to things,
+                #this would be horrifically insecure.
+                self.sage_process = subprocess.Popen(sage_bin, shell=False)
+            jac = self.graph.jacobian_sage_pipe(self.sage_process)
+        else:
+            jac = None
+            self.set_infobox("jac", ' ')
+            self.set_infobox("trees", ' ')
+            
+        if jac != None:
+            trees = reduce(lambda x,y: x * y, [1]+jac)
+            self.set_infobox("jac",jac)
+            self.set_infobox("trees",trees)
         
     def update_lap(self, event):
         disp = str(self.graph.laplacian())
@@ -91,4 +105,3 @@ class Controller:
             print self.divisor.degree
         else:
             return "False"
-            
