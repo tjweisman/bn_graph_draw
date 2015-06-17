@@ -89,7 +89,9 @@ def get_tikz_code(graph):
 
 #the graph-drawing panel
 class DrawPanel(wx.Panel):
-    def __init__(self, parent, info_evt, options):
+    def __init__(self, parent, 
+                 update_evt=None, 
+                 options=None):
         wx.Panel.__init__(self, parent)
         self.options = options
 
@@ -134,7 +136,7 @@ class DrawPanel(wx.Panel):
         self.fontcolors = ["white","white","white","black"]
 
         #function to call whenever an edge is added to the graph
-        self.info_evt = info_evt
+        self.update_evt = update_evt
 
         #which vertex is selected (red), or None if none is
         self.selection = None
@@ -179,7 +181,7 @@ class DrawPanel(wx.Panel):
             
             m = min(len(str(self.divisor.get(vertex))), 4)
 
-            if self.options["divisor_iput"].value:
+            if self.options and self.options["divisor_iput"].value:
                 d_val = str(self.divisor.get(vertex))
                 font = wx.Font(self.fontsizes[m-1],
                                wx.FONTFAMILY_SWISS,
@@ -242,17 +244,18 @@ class DrawPanel(wx.Panel):
         self.update_info()
         self.Refresh()
     def update_info(self):
-        self.info_evt()
+        if self.update_evt:
+            self.update_evt()
 
     def update_options(self):
-        if self.options["divisor_iput"].value:
-            self.divisor_panel.Show()
-            self.v_radius = DIV_RADIUS
-            self.click_radius = DIV_CLICK_RADIUS
-        else:
+        if not self.options or not self.options["divisor_iput"].value:
             self.v_radius = NODIV_RADIUS
             self.click_radius = NODIV_CLICK_RADIUS
             self.divisor_panel.Hide()
+        else:
+            self.divisor_panel.Show()
+            self.v_radius = DIV_RADIUS
+            self.click_radius = DIV_CLICK_RADIUS
 
     def mouse_move(self, event):
         #draw different colors if we're hovering

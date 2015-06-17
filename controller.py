@@ -16,9 +16,6 @@ class Controller:
 
         self.sage_process = None
 
-    def set_infobox(self, box_name, value):
-        self.frame.infoboxes[box_name].display.SetValue(str(value))
-        
     #open up a file dialog and write to a file
     def export_tikz(self, evt):
         dialog = wx.FileDialog(self.frame, style = wx.FD_SAVE)
@@ -32,7 +29,7 @@ class Controller:
 
     def compute_gonality(self, event):
         gon = gonality.gonality(self.graph)
-        self.set_infobox("gonality", gon)
+        self.frame.set_infobox("gonality", gon)
 
     def draw_Bn(self,event):
         self.drawer.gen_Bn(10)
@@ -43,13 +40,13 @@ class Controller:
         G = self.graph
         self.update_lap(None)
         self.compute_jacobian(None)
-        self.set_infobox("genus", G.genus())
-        self.set_infobox("pair_guess", G.guess_pairing())
-        self.set_infobox("gonality", ' ')
-        self.set_infobox("connect", G.connected())
-        self.set_infobox("div", self.divisor.values)
-        self.set_infobox("subset", self.drawer.fireset)
-        self.set_infobox("zero", self.divisor_zero())
+        self.frame.set_infobox("genus", G.genus())
+        self.frame.set_infobox("pair_guess", G.guess_pairing())
+        self.frame.set_infobox("gonality", ' ')
+        self.frame.set_infobox("connect", G.connected())
+        self.frame.set_infobox("div", self.divisor.values)
+        self.frame.set_infobox("subset", self.drawer.fireset)
+        self.frame.set_infobox("zero", self.divisor_zero())
     
     def clear_event(self, event):
         self.drawer.clear()
@@ -72,28 +69,29 @@ class Controller:
             jac = self.graph.jacobian_sage_pipe(self.sage_process)
         else:
             jac = None
-            self.set_infobox("jac", ' ')
-            self.set_infobox("trees", ' ')
+            self.frame.set_infobox("jac", ' ')
+            self.frame.set_infobox("trees", ' ')
             
         if jac != None:
             trees = reduce(lambda x,y: x * y, [1]+jac)
-            self.set_infobox("jac",jac)
-            self.set_infobox("trees",trees)
+            self.frame.set_infobox("jac",jac)
+            self.frame.set_infobox("trees",trees)
         
     def update_lap(self, event):
         disp = str(self.graph.laplacian())
         if self.frame.options["mathematica"].value:
             disp = disp.replace("[","{").replace("]","}")
-        self.set_infobox("lap", disp)
+        print disp
+        self.frame.set_infobox("lap", disp)
 
     def try_burn(self, event):
         if self.drawer.selection: 
             subset = self.divisor.burn(self.drawer.selection)
             if not subset:
-                self.set_infobox("subset", "Cannot push chips closer")
+                self.frame.set_infobox("subset", "Cannot push chips closer")
                 self.drawer.fireset = []
             else:
-                self.set_infobox("subset",
+                self.frame.set_infobox("subset",
                     repr(subset) + " - press 'Fire!' to chip-fire all")
                 self.drawer.fireset = subset
 
