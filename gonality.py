@@ -7,7 +7,7 @@ try:
     from sympy.matrices import *
 except ImportError as e:
     sympy_ok = False
-from graph import *
+from graph_ui.graph import *
 
 #implementation of Algorithm 5.1 in Bruyn '12
 def semi_reduce(D, v0):

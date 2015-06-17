@@ -10,7 +10,8 @@ reconfigure() method.
 
 """
 
-import wx, controller, graph_frame
+import wx, controller
+from graph_ui.graph_frame import GraphFrame
 
 sage_ok = True
 OPTIONS=0
@@ -21,7 +22,7 @@ except ImportError as e:
     sage_ok = False
 
 app = wx.App()
-frame = graph_frame.GraphFrame('Graphmake')
+frame = GraphFrame('Graphmake')
 control = controller.Controller(frame)
 
 #add infoboxes

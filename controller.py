@@ -3,8 +3,8 @@
 buttons and infobox updating procedures are contained here.
 
 """
-import wx, gonality, drawgraph
-from graph import *
+import wx, gonality
+from graph_ui.graph import *
 import subprocess
 
 class Controller:
