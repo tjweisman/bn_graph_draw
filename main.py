@@ -53,6 +53,7 @@ if not sage_ok:
 frame.add_button("Try burn", control.try_burn,
                 display_opt="divisor_iput")
 frame.add_button("Draw B_n", control.draw_Bn)
+frame.add_button("Start sage", control.start_sage)
 
 #add file menu options
 frame.add_file_option("Export TikZ", control.export_tikz)

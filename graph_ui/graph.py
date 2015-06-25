@@ -1,13 +1,10 @@
 """this file contains code for actually storing/computing graph information"""
 
-#import spanning_trees
+import sage_wrapper
+import inspect
+sage_util = sage_wrapper.sagely_import("graph_ui.sage_utils")
 
-sage_ok = True
 sympy_ok = True
-try:
-    from sage.all import *
-except ImportError as e:
-    sage_ok = False
 
 try:
     from sympy.matrices import *
@@ -165,9 +162,7 @@ class Graph:
         return self.Q
         
     def jacobian(self):
-        #only works if this program is running inside sage
-        Q = matrix(self.laplacian())
-        return filter(lambda x: x != 0 and x != 1, Q.elementary_divisors())
+        return sage_util.graph_jacobian(self.laplacian())
 
     def guess_pairing(self):
         if not sympy_ok:
@@ -216,27 +211,6 @@ class Graph:
                 count += 1
         return count
     
-    #TODO: pipe this to a running sage process so it doesn't take as long
-    #also make this way less dumb
-    def jacobian_sage_pipe(self, sage_process):
-        
-        print sage_process.stdin
-        return
-        tmp = open(".tmp.sage", "w")
-        tmp.write("A = matrix(%s)\n"%repr(self.laplacian()))
-        tmp.write("div = A.elementary_divisors()\n")
-        tmp.write("div = filter(lambda x: x != 0 and x != 1, div)\n")
-        tmp.write("out = open('.output', 'w')\n")
-        tmp.write("out.write(repr(div))\n")
-        tmp.write("out.close()")
-        tmp.close()
-        call(["sage",".tmp.sage"])
-        tmp = open(".output","r")
-        jac = eval(tmp.read())
-        tmp.close()
-        return jac
-        
-
     def find_tree(self):
         #initialize tree as a list of edges
         T = []

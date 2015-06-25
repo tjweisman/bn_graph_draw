@@ -5,7 +5,7 @@ buttons and infobox updating procedures are contained here.
 """
 import wx, gonality
 from graph_ui.graph import *
-import subprocess
+import graph_ui.sage_wrapper
 
 class Controller:
     def __init__(self, frame):
@@ -13,8 +13,10 @@ class Controller:
         self.drawer = frame.view
         self.graph = frame.view.graph
         self.divisor = frame.view.divisor
-
-        self.sage_process = None
+        
+        self.sage_bin = self.frame.options["sage_install"].value
+        if self.sage_bin != "":
+            sage_wrapper.setup(self.sage_bin, "sage:")
 
     #open up a file dialog and write to a file
     def export_tikz(self, evt):
@@ -26,6 +28,9 @@ class Controller:
             tf = open(path, "w")
             tf.write(drawgraph.get_tikz_code(self.graph))
             tf.close()
+
+    def start_sage(self, event):
+        sage_wrapper.start(self.sage_bin, "sage:")
 
     def compute_gonality(self, event):
         gon = gonality.gonality(self.graph)
@@ -57,21 +62,7 @@ class Controller:
         self.drawer.Refresh()
 
     def compute_jacobian(self, event):
-        print sage_ok
-        if sage_ok:
-            jac = self.graph.jacobian()
-        elif self.frame.options["sage_install"].value != "":
-            if not self.sage_process:
-                sage_bin = self.frame.options["sage_install"].value
-                #if this program had higher level access to things,
-                #this would be horrifically insecure.
-                self.sage_process = subprocess.Popen(sage_bin, shell=False)
-            jac = self.graph.jacobian_sage_pipe(self.sage_process)
-        else:
-            jac = None
-            self.frame.set_infobox("jac", ' ')
-            self.frame.set_infobox("trees", ' ')
-            
+        jac = self.graph.jacobian()
         if jac != None:
             trees = reduce(lambda x,y: x * y, [1]+jac)
             self.frame.set_infobox("jac",jac)
@@ -81,7 +72,6 @@ class Controller:
         disp = str(self.graph.laplacian())
         if self.frame.options["mathematica"].value:
             disp = disp.replace("[","{").replace("]","}")
-        print disp
         self.frame.set_infobox("lap", disp)
 
     def try_burn(self, event):
