@@ -61,12 +61,14 @@ class Graph:
         # SymPy version of laplacian (so we don't call the matrix constructor
         # unnecessarily)
         self.SymQ = None
+        self._connected_ = True
     def add_vertex(self, x=0, y=0):    
         new = Vertex(x,y)
         new.i = len(self.vertices)
         self.vertices.append(new)
         self.Q = None
         self.A = None
+        self._connected_ = None
     def add_edge(self, v1, v2):
         self.edges.append(Edge(v1, v2))
         
@@ -96,15 +98,21 @@ class Graph:
         return self.vertices[-1]
 
     def connected(self):
+        #this code is really crappy, probably because Dan Mitropolsky wrote it.
+        #unfortunately, I can't port to Sage because I might not have access. 
+        if self._connected_ == True or self._connected_ == False:
+            return self._connected_
+        
         vseen, edgeQ = [], []
         edgeL = list(self.edges)
+        self._connected_ = True
         try:
             newv = self.vertices[0]
             vseen.append(newv)
             nseen = 1
         except:
-            return 1
-       
+            return self._connected_
+
         while nseen < len(self.vertices):
             for e in edgeL:
                 if e.has(newv):
@@ -112,7 +120,8 @@ class Graph:
                   #  edgeL.remove(e)
             while True:
                 if len(edgeQ) == 0:
-                    return 0
+                    self._connected_ = False
+                    return False
                 if edgeQ[0].v1 not in vseen:
                     newv = edgeQ[0].v1
                     vseen.append(newv)
@@ -127,7 +136,7 @@ class Graph:
                     break
                 edgeQ.pop(0)
 
-        return 1
+        return self._connected_
 
     def sym_laplacian(self):
         if self.Q:
@@ -162,7 +171,10 @@ class Graph:
         return self.Q
         
     def jacobian(self):
-        return sage_util.graph_jacobian(self.laplacian())
+        if self.connected():
+            return sage_util.graph_jacobian(self.laplacian())
+        else:
+            return "disconnected"
 
     def guess_pairing(self):
         if not sympy_ok:
@@ -261,7 +273,6 @@ class Graph:
 
         for divisor in Jac:
             print str(divisor)
-     
 
 # a divisor on a graph
 class Divisor:
@@ -318,7 +329,6 @@ class Divisor:
                     self.values[e.v1.i] -= 1
                 else:
                     self.values[e.v2.i] -= 1
-
 
 def getdivisor(tree, G, startv = 0, ordering = []):
 

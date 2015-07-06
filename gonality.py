@@ -9,9 +9,14 @@ except ImportError as e:
     sympy_ok = False
 from graph_ui.graph import *
 
+class GraphComputationError(Exception):
+    pass
+
 #implementation of Algorithm 5.1 in Bruyn '12
 def semi_reduce(D, v0):
     G = D.graph
+    if not G.connected():
+        raise GraphComputationError('Graph must be connected to semi-reduce')
     n = len(G.vertices)
     x = Divisor(G)
     if n <= 1:
@@ -33,7 +38,6 @@ def find_possible_set(Dv, G, v0):
     outdegree = [0]*n
     state = [True]*n
     A_i = ones(n,1)
-
     num = 0
     #queue of fully burned vertices
     remove_q = Queue()

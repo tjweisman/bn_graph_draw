@@ -56,7 +56,8 @@ class GraphFrame(wx.Frame):
         self.button_panel.SetSizer(self.button_sizer)
 
         #the graph drawing panel
-        self.view = DrawPanel(self.main_panel, self.update_graph)
+        self.view = DrawPanel(self.main_panel, self.update_graph, 
+                              options=self.options)
         self.update_callback = None
 
         #add file menu options
@@ -128,3 +129,7 @@ class GraphFrame(wx.Frame):
 
     def set_infobox(self, box_name, value):
         self.infoboxes[box_name].display.SetValue(str(value))
+
+    def Show(self):
+        self.reconfigure()
+        super(GraphFrame, self).Show()

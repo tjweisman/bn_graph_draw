@@ -44,7 +44,8 @@ class Controller:
         """mostly just updating infoboxes"""
         G = self.graph
         self.update_lap(None)
-        self.compute_jacobian(None)
+        if sage_wrapper.sage_started():
+            self.compute_jacobian(None)
         self.frame.set_infobox("genus", G.genus())
         self.frame.set_infobox("pair_guess", G.guess_pairing())
         self.frame.set_infobox("gonality", ' ')
@@ -87,9 +88,11 @@ class Controller:
 
     def divisor_zero(self):
         self.divisor.compute_degree()
-        if (self.divisor.degree == 0 and 
-            gonality.rank_nonnegative(self.divisor)):
-            return "True"
-            print self.divisor.degree
-        else:
-            return "False"
+        is_zero = "False"
+        try:
+            if (self.divisor.degree == 0 and
+                gonality.rank_nonnegative(self.divisor)):
+                is_zero = "True"
+        except gonality.GraphComputationError:
+            return ""
+        return "False"

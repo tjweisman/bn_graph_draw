@@ -82,6 +82,9 @@ def setup(sage_bin, sage_prompt="sage:"):
 def start(sage_bin, sage_prompt="sage:"):
     sage_comm.start(sage_bin, sage_prompt)
 
+def sage_started():
+    return sage_comm.sage_ok or sage_comm.sage_process
+
 def sage_wrapper(func, module_name, sage_comm):
     """decorator for functions to call from inside sage.
 
